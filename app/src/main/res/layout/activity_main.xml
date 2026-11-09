@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="J.A.R.V.I.S"
+            android:textColor="@color/accent"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Offline voice assistant · data never leaves this phone"
+            android:textColor="@color/muted"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@color/card"
+            android:fontFamily="monospace"
+            android:padding="12dp"
+            android:textColor="@color/text"
+            android:textSize="13sp" />
+
+        <TextView style="@style/Section" android:text="1 · Setup (one time)" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Command language / speech model"
+            android:textColor="@color/muted" />
+
+        <RadioGroup
+            android:id="@+id/rgLang"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/rbEn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="English (India) – recommended, 36 MB" />
+
+            <RadioButton
+                android:id="@+id/rbHi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Hindi – 42 MB" />
+        </RadioGroup>
+
+        <Button android:id="@+id/btnDownload" style="@style/Btn" android:text="① Download offline models (one time, needs internet)" />
+        <Button android:id="@+id/btnPerms" style="@style/Btn" android:text="② Grant permissions (mic, contacts, call, SMS)" />
+        <Button android:id="@+id/btnA11y" style="@style/Btn" android:text="③ Enable Jarvis Accessibility (for typing / Send)" />
+        <Button android:id="@+id/btnOverlay" style="@style/Btn" android:text="④ Allow 'Display over other apps' (opening apps from background)" />
+        <Button android:id="@+id/btnEnroll" style="@style/Btn" android:text="⑤ Record MY voice (voice lock)" />
+
+        <TextView style="@style/Section" android:text="2 · Settings" />
+
+        <CheckBox
+            android:id="@+id/cbWake"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Require wake word before every command" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Wake words (comma separated)"
+            android:textColor="@color/muted" />
+
+        <EditText
+            android:id="@+id/etWake"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+
+        <TextView
+            android:id="@+id/tvThreshold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/muted" />
+
+        <SeekBar
+            android:id="@+id/sbThreshold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Country code for WhatsApp numbers"
+            android:textColor="@color/muted" />
+
+        <EditText
+            android:id="@+id/etCountry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number" />
+
+        <Button android:id="@+id/btnSave" style="@style/Btn" android:text="Save settings" />
+
+        <TextView style="@style/Section" android:text="3 · Run" />
+
+        <Button
+            android:id="@+id/btnToggle"
+            style="@style/Btn"
+            android:minHeight="64dp"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Test a command by typing (no voice check, only works inside this app)"
+            android:textColor="@color/muted" />
+
+        <EditText
+            android:id="@+id/etTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g. open youtube / set alarm for 7 30 am"
+            android:inputType="text" />
+
+        <Button android:id="@+id/btnTest" style="@style/Btn" android:text="Run test command" />
+
+        <TextView style="@style/Section" android:text="Log (kept in memory only)" />
+
+        <TextView
+            android:id="@+id/tvLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/card"
+            android:fontFamily="monospace"
+            android:minHeight="160dp"
+            android:padding="10dp"
+            android:textColor="@color/text"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>

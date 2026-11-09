@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jarvis</string>
+    <string name="a11y_desc">Lets Jarvis type text, press Send, go back/home and scroll when you give a voice command. Everything runs offline on this phone.</string>
+</resources>

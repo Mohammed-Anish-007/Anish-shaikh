@@ -1,0 +1,50 @@
+name: Build Jarvis APK
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Unit tests (command parser)
+        run: gradle --no-daemon testDebugUnitTest
+
+      - name: Build APK
+        run: gradle --no-daemon assembleDebug
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk Jarvis-Offline.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Jarvis-Offline-APK
+          path: Jarvis-Offline.apk
+
+      - name: Publish to "jarvis-latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: jarvis-latest
+          name: Jarvis Offline – latest APK
+          prerelease: true
+          files: Jarvis-Offline.apk
+          body: |
+            Download **Jarvis-Offline.apk** below and install it on your Android phone (Android 8+).
+            Setup steps are in the README.
