@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Jarvis</string>
-    <string name="a11y_desc">Lets Jarvis type text, press Send, go back/home and scroll when you give a voice command. Everything runs offline on this phone.</string>
+    <string name="a11y_desc">Lets Jarvis act on your voice commands: type text, tap buttons by name, press Send, swipe, go back/home, switch Wi-Fi/Bluetooth/data from Quick Settings, take screenshots and lock the screen. It only acts when YOU give a verified voice command and everything runs offline on this phone.</string>
 </resources>

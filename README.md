@@ -24,6 +24,25 @@ An Android voice assistant that runs **completely offline**, **obeys only your v
 | "what time is it" | "kitne baje hain" | Tells you the time |
 | "go to sleep" | "so jao" | Stops listening |
 
+### Full phone control
+| Say | What happens |
+|---|---|
+| "wifi on karo", "bluetooth band karo", "mobile data on", "airplane mode on", "hotspot chalu karo", "location off", "battery saver on", "auto rotate off" | Opens Quick Settings, flips the switch, and closes it again |
+| "bluetooth settings kholo" | Opens that settings page |
+| "brightness full / half / kam karo / badhao / 40 percent" | Sets the screen brightness (needs step ⑥) |
+| "subscribe pe click karo", "click on like", "OK dabao", "long press photo" | Taps **any button or text on screen** by name, inside any app |
+| "next reel", "swipe up / down / left / right" | Swipes, e.g. for Reels or Shorts |
+| "youtube pe arijit singh songs chalao", "play despacito" | Searches YouTube |
+| "google pe weather in mumbai search karo" | Web search |
+| "gaana chalao", "music band karo", "agla gaana", "pichla gaana" | Controls whichever music or video app is playing |
+| "call uthao", "call kaato" | Answers or rejects an incoming call |
+| "notifications padho", "read my messages", "clear notifications" | Reads your latest notifications aloud, or clears them (needs step ⑦) |
+| "battery kitni hai" | Tells you the battery level |
+| "mute karo", "phone silent karo", "vibrate mode", "normal mode" | Sound and ringer mode |
+| "screenshot lo", "phone lock karo", "power menu" | Screenshot, lock screen, power menu |
+
+If the screen is off when you give a command, Jarvis turns it on. It cannot get past your PIN or pattern; Android does not allow that.
+
 You can also say just **"Jarvis"**, wait for **"Yes?"**, and then give the command within 8 seconds.
 
 ---
@@ -53,6 +72,8 @@ You can also say just **"Jarvis"**, wait for **"Yes?"**, and then give the comma
      - On **Android 13+**, if the switch is greyed out ("Restricted setting"): open *Settings → Apps → Jarvis → ⋮ (top right) → Allow restricted settings*, then try again.
    - **④ Display over other apps** (optional, helps on some phones such as Xiaomi, Oppo and Vivo)
    - **⑤ Record MY voice**
+   - **⑥ Allow brightness control** (optional)
+   - **⑦ Allow reading notifications aloud** (optional)
 4. Tap **▶ Start Jarvis**. A notification shows while it is listening. Now say *"Jarvis, open YouTube"*.
 
 ### Tips
@@ -90,7 +111,8 @@ gradle testDebugUnitTest  # command-parser unit tests
 | `EnrollActivity.kt` | Records the owner's voice |
 | `CommandParser.kt` | English, Hinglish and Hindi command understanding (unit-tested) |
 | `CommandExecutor.kt` | Opens apps, calls, SMS, WhatsApp, alarms, timers, torch, volume |
-| `JarvisAccessibilityService.kt` | Typing, Send button, back/home/scroll |
+| `JarvisAccessibilityService.kt` | Typing, tap-by-name, Send, swipe, Quick Settings toggles, back/home/scroll |
+| `JarvisNotificationListener.kt` | Keeps recent notifications in memory so they can be read aloud |
 | `Finders.kt`, `TextUtil.kt`, `Translit.kt` | Sound-alike matching of contacts and apps (Devanagari ↔ Latin) |
 | `ModelManager.kt`, `VoskEngine.kt` | One-time model download and loading |
 

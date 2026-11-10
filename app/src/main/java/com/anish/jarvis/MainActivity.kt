@@ -18,6 +18,7 @@ import android.widget.RadioButton
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 
 class MainActivity : Activity() {
@@ -90,6 +91,13 @@ class MainActivity : Activity() {
                 else -> startActivity(Intent(this, EnrollActivity::class.java))
             }
         }
+        findViewById<Button>(R.id.btnWriteSettings).setOnClickListener {
+            startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName")))
+        }
+        findViewById<Button>(R.id.btnNotifAccess).setOnClickListener {
+            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            Toast.makeText(this, "Find \"Jarvis\" and allow it", Toast.LENGTH_LONG).show()
+        }
         findViewById<Button>(R.id.btnSave).setOnClickListener { saveSettings(); toast("Saved") }
         btnToggle.setOnClickListener { toggleService() }
         findViewById<Button>(R.id.btnTest).setOnClickListener {
@@ -142,7 +150,8 @@ class MainActivity : Activity() {
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.CALL_PHONE,
-            Manifest.permission.SEND_SMS
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.ANSWER_PHONE_CALLS
         )
         if (Build.VERSION.SDK_INT >= 33) p += Manifest.permission.POST_NOTIFICATIONS
         return p
@@ -177,6 +186,8 @@ class MainActivity : Activity() {
             appendLine("${mark(a11yEnabled())} Accessibility (typing / Send / back)")
             appendLine("${mark(Settings.canDrawOverlays(this@MainActivity))} Display over other apps (optional)")
             appendLine("${mark(VoiceProfile.isEnrolled(this@MainActivity))} Owner voice recorded")
+            appendLine("${mark(Settings.System.canWrite(this@MainActivity))} Brightness control (optional)")
+            appendLine("${mark(NotificationManagerCompat.getEnabledListenerPackages(this@MainActivity).contains(packageName))} Read notifications (optional)")
             append(if (JarvisService.isRunning) "● Jarvis is LISTENING" else "○ Jarvis is stopped")
         }
         btnToggle.text = if (JarvisService.isRunning) "■  Stop Jarvis" else "▶  Start Jarvis"

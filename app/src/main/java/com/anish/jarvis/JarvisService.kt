@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
@@ -146,9 +147,21 @@ class JarvisService : Service(), RecognitionListener, TextToSpeech.OnInitListene
             return
         }
 
+        wakeScreen()
         val cmd = CommandParser.parse(if (wake.found) wake.rest else text)
         JarvisLog.add("→ $cmd")
         executor.execute(cmd)
+    }
+
+    /** Turn the screen on so the result of the command is visible (it cannot bypass your lock screen). */
+    private fun wakeScreen() {
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        if (pm.isInteractive) return
+        @Suppress("DEPRECATION")
+        val wl = pm.newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP, "jarvis:wake"
+        )
+        wl.acquire(5_000)
     }
 
     // ------------------------------------------------------------------ speech output

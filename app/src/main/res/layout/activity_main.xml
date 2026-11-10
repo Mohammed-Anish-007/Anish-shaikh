@@ -67,6 +67,8 @@
         <Button android:id="@+id/btnA11y" style="@style/Btn" android:text="③ Enable Jarvis Accessibility (for typing / Send)" />
         <Button android:id="@+id/btnOverlay" style="@style/Btn" android:text="④ Allow 'Display over other apps' (opening apps from background)" />
         <Button android:id="@+id/btnEnroll" style="@style/Btn" android:text="⑤ Record MY voice (voice lock)" />
+        <Button android:id="@+id/btnWriteSettings" style="@style/Btn" android:text="⑥ Allow brightness control (Modify system settings)" />
+        <Button android:id="@+id/btnNotifAccess" style="@style/Btn" android:text="⑦ Allow reading notifications aloud" />
 
         <TextView style="@style/Section" android:text="2 · Settings" />
 

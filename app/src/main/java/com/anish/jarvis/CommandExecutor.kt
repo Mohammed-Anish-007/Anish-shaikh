@@ -2,6 +2,7 @@ package com.anish.jarvis
 
 import android.Manifest
 import android.accessibilityservice.AccessibilityService
+import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,10 +10,14 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
 import android.net.Uri
+import android.os.BatteryManager
 import android.os.Build
 import android.provider.AlarmClock
 import android.provider.MediaStore
+import android.provider.Settings
+import android.telecom.TelecomManager
 import android.telephony.SmsManager
+import android.view.KeyEvent
 import androidx.core.content.ContextCompat
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
@@ -89,6 +94,47 @@ class CommandExecutor(
             Command.VolumeUp -> volume(AudioManager.ADJUST_RAISE)
             Command.VolumeDown -> volume(AudioManager.ADJUST_LOWER)
             Command.StopListening -> { say("Going to sleep"); onStop() }
+            is Command.Toggle -> toggle(cmd.feature, cmd.on)
+            is Command.OpenSettings -> { launch(Intent(settingsAction(cmd.feature))); say("Opening ${cmd.feature.spoken} settings") }
+            is Command.Brightness -> brightness(cmd)
+            is Command.Click -> {
+                if (needA11y()) return
+                val hit = a11y?.clickByText(cmd.target, cmd.long)
+                if (hit == null) say("I couldn't find ${cmd.target} on the screen")
+            }
+            is Command.Swipe -> if (!needA11y()) a11y?.swipe(cmd.dir)
+            is Command.YoutubeSearch -> youtube(cmd.query)
+            is Command.WebSearch -> webSearch(cmd.query)
+            Command.ReadNotifications -> readNotifications()
+            Command.ClearNotifications -> {
+                JarvisNotificationListener.instance?.cancelAllNotifications()
+                JarvisNotificationListener.clear()
+                say("Notifications cleared")
+            }
+            Command.BatteryLevel -> {
+                val bm = ctx.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+                val pct = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                say("Battery is at $pct percent" + if (bm.isCharging) ", charging" else "")
+            }
+            Command.Mute -> {
+                audio().adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
+            }
+            Command.Unmute -> {
+                audio().adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE, AudioManager.FLAG_SHOW_UI)
+                say("Sound on")
+            }
+            Command.VibrateMode -> ringer(AudioManager.RINGER_MODE_VIBRATE, "Vibrate mode on")
+            Command.SilentMode -> ringer(AudioManager.RINGER_MODE_SILENT, "Silent mode on")
+            Command.RingMode -> ringer(AudioManager.RINGER_MODE_NORMAL, "Ring mode on")
+            Command.MediaPlay -> media(KeyEvent.KEYCODE_MEDIA_PLAY)
+            Command.MediaPause -> media(KeyEvent.KEYCODE_MEDIA_PAUSE)
+            Command.MediaNext -> media(KeyEvent.KEYCODE_MEDIA_NEXT)
+            Command.MediaPrevious -> media(KeyEvent.KEYCODE_MEDIA_PREVIOUS)
+            Command.AnswerCall -> answerCall()
+            Command.EndCall -> endCall()
+            Command.Screenshot -> globalP(AccessibilityService.GLOBAL_ACTION_TAKE_SCREENSHOT)
+            Command.LockScreen -> globalP(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN)
+            Command.PowerMenu -> if (!needA11y()) a11y?.global(AccessibilityService.GLOBAL_ACTION_POWER_DIALOG)
             is Command.Unknown -> say(if (cmd.reason.isNotEmpty()) "Sorry, ${cmd.reason}" else "Sorry, I didn't understand")
         }
     }
@@ -211,6 +257,157 @@ class CommandExecutor(
     private fun volume(dir: Int) {
         val am = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         repeat(2) { am.adjustStreamVolume(AudioManager.STREAM_MUSIC, dir, AudioManager.FLAG_SHOW_UI) }
+    }
+
+    // ------------------------------------------------------------------ full-control helpers
+
+    private fun audio() = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+    /** Screenshot / lock need Android 9+. */
+    private fun globalP(action: Int) {
+        if (Build.VERSION.SDK_INT < 28) { say("This needs Android 9 or newer"); return }
+        if (needA11y()) return
+        a11y?.global(action)
+    }
+
+    private fun settingsAction(f: Command.Feature): String = when (f) {
+        Command.Feature.WIFI -> Settings.ACTION_WIFI_SETTINGS
+        Command.Feature.BLUETOOTH -> Settings.ACTION_BLUETOOTH_SETTINGS
+        Command.Feature.MOBILE_DATA -> Settings.ACTION_DATA_ROAMING_SETTINGS
+        Command.Feature.AIRPLANE -> Settings.ACTION_AIRPLANE_MODE_SETTINGS
+        Command.Feature.HOTSPOT -> Settings.ACTION_WIRELESS_SETTINGS
+        Command.Feature.LOCATION -> Settings.ACTION_LOCATION_SOURCE_SETTINGS
+        Command.Feature.DND -> Settings.ACTION_SOUND_SETTINGS
+        Command.Feature.AUTO_ROTATE -> Settings.ACTION_DISPLAY_SETTINGS
+        Command.Feature.BATTERY_SAVER -> Settings.ACTION_BATTERY_SAVER_SETTINGS
+    }
+
+    /** Quick-Settings tile labels (English + Hindi phones), and the switch label inside Android 12+'s Internet dialog. */
+    private fun tileNames(f: Command.Feature): Pair<List<String>, String?> {
+        val n: List<String> = when (f) {
+            Command.Feature.WIFI -> listOf("wi fi", "wifi", "wlan", "वाई फाई", "वाईफाई", "internet", "इंटरनेट")
+            Command.Feature.BLUETOOTH -> listOf("bluetooth", "ब्लूटूथ")
+            Command.Feature.MOBILE_DATA -> listOf("mobile data", "mobile", "cellular", "मोबाइल डेटा", "internet", "इंटरनेट")
+            Command.Feature.AIRPLANE -> listOf("airplane", "aeroplane", "flight", "हवाई जहाज")
+            Command.Feature.HOTSPOT -> listOf("hotspot", "mobile hotspot", "हॉटस्पॉट")
+            Command.Feature.LOCATION -> listOf("location", "लोकेशन", "स्थान")
+            Command.Feature.DND -> listOf("do not disturb", "dnd", "परेशान न करें")
+            Command.Feature.AUTO_ROTATE -> listOf("auto rotate", "auto rotation", "rotate", "portrait", "ऑटो रोटेट")
+            Command.Feature.BATTERY_SAVER -> listOf("battery saver", "power saving", "power saver", "बैटरी सेवर")
+        }
+        val dialog = when (f) {
+            Command.Feature.WIFI -> "wi fi"
+            Command.Feature.MOBILE_DATA -> "mobile data"
+            else -> null
+        }
+        return n.map { TextUtil.normalize(it) } to dialog
+    }
+
+    private fun toggle(f: Command.Feature, on: Boolean?) {
+        val a = a11y
+        if (a == null) {
+            // Without accessibility we can only open the right settings page.
+            launch(Intent(settingsAction(f)))
+            say("Opening ${f.spoken} settings. Enable Jarvis accessibility to switch it by voice")
+            return
+        }
+        val (names, dialog) = tileNames(f)
+        val what = when (on) { true -> "on"; false -> "off"; null -> "switched" }
+        a.toggleQuickSetting(names, dialog, on) { r ->
+            when (r) {
+                JarvisAccessibilityService.TileResult.DONE ->
+                    say(if (on == null) "${f.spoken} switched" else "${f.spoken} $what")
+                JarvisAccessibilityService.TileResult.ALREADY -> say("${f.spoken} is already $what")
+                JarvisAccessibilityService.TileResult.NOT_FOUND -> {
+                    launch(Intent(settingsAction(f)))
+                    say("I couldn't find the ${f.spoken} button, opening settings")
+                }
+            }
+        }
+    }
+
+    private fun brightness(c: Command.Brightness) {
+        if (!Settings.System.canWrite(ctx)) {
+            launch(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + ctx.packageName)))
+            say("Please allow Jarvis to modify system settings, then ask again")
+            return
+        }
+        val cr = ctx.contentResolver
+        Settings.System.putInt(cr, Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL)
+        val cur = Settings.System.getInt(cr, Settings.System.SCREEN_BRIGHTNESS, 128)
+        val target = if (c.percent != null) c.percent * 255 / 100 else cur + c.delta * 255 / 100
+        val v = target.coerceIn(3, 255)
+        Settings.System.putInt(cr, Settings.System.SCREEN_BRIGHTNESS, v)
+        say("Brightness ${v * 100 / 255} percent")
+    }
+
+    private fun media(code: Int) {
+        val am = audio()
+        am.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, code))
+        am.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, code))
+    }
+
+    private fun ringer(mode: Int, msg: String) {
+        val am = audio()
+        try {
+            am.ringerMode = mode
+            say(msg)
+        } catch (e: SecurityException) {
+            // Silent mode needs Do-Not-Disturb access on newer Android
+            am.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+            say("Silent mode needs Do Not Disturb access, I set vibrate instead")
+        }
+    }
+
+    private fun answerCall() {
+        if (!granted(Manifest.permission.ANSWER_PHONE_CALLS)) { say("Please allow the answer calls permission"); return }
+        val tm = ctx.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+        @Suppress("DEPRECATION", "MissingPermission")
+        tm.acceptRingingCall()
+    }
+
+    private fun endCall() {
+        if (Build.VERSION.SDK_INT < 28) { say("This needs Android 9 or newer"); return }
+        if (!granted(Manifest.permission.ANSWER_PHONE_CALLS)) { say("Please allow the answer calls permission"); return }
+        val tm = ctx.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+        @Suppress("DEPRECATION", "MissingPermission")
+        tm.endCall()
+    }
+
+    private fun youtube(q: String) {
+        val i = Intent(Intent.ACTION_SEARCH).setPackage("com.google.android.youtube").putExtra(SearchManager.QUERY, q)
+        try {
+            launch(i)
+        } catch (e: Exception) {
+            launch(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(q))))
+        }
+        say("Searching YouTube for $q")
+    }
+
+    private fun webSearch(q: String) {
+        try {
+            launch(Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, q))
+        } catch (e: Exception) {
+            launch(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=" + Uri.encode(q))))
+        }
+        say("Searching for $q")
+    }
+
+    private fun readNotifications() {
+        if (JarvisNotificationListener.instance == null) {
+            launch(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            say("Please allow notification access for Jarvis")
+            return
+        }
+        val items = JarvisNotificationListener.latest(5)
+        if (items.isEmpty()) { say("You have no new notifications"); return }
+        val sb = StringBuilder("You have ${items.size} notifications. ")
+        for (it in items) {
+            sb.append(it.app).append(". ")
+            if (it.title.isNotBlank()) sb.append(it.title).append(": ")
+            sb.append(it.text).append(". ")
+        }
+        say(sb.toString())
     }
 
     private fun timeText(h: Int, m: Int): String {

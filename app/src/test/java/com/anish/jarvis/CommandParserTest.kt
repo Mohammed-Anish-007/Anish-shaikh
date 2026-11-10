@@ -82,6 +82,66 @@ class CommandParserTest {
         assertEquals(0, TextUtil.bestMatch(listOf("Mummy", "Papa", "Rahul"), "mummy")!!.first)
     }
 
+    @Test fun fullControlToggles() {
+        assertEquals(Command.Toggle(Command.Feature.WIFI, true), p("wifi on karo"))
+        assertEquals(Command.Toggle(Command.Feature.WIFI, false), p("turn off wi-fi"))
+        assertEquals(Command.Toggle(Command.Feature.BLUETOOTH, false), p("bluetooth band karo"))
+        assertEquals(Command.Toggle(Command.Feature.MOBILE_DATA, true), p("mobile data on kar do"))
+        assertEquals(Command.Toggle(Command.Feature.MOBILE_DATA, false), p("internet band karo"))
+        assertEquals(Command.Toggle(Command.Feature.AIRPLANE, true), p("airplane mode on"))
+        assertEquals(Command.Toggle(Command.Feature.HOTSPOT, true), p("hotspot chalu karo"))
+        assertEquals(Command.Toggle(Command.Feature.LOCATION, false), p("location off"))
+        assertEquals(Command.Toggle(Command.Feature.BATTERY_SAVER, true), p("battery saver on karo"))
+        assertEquals(Command.Toggle(Command.Feature.WIFI, false), p("वाई-फाई बंद करो"))
+        assertEquals(Command.OpenSettings(Command.Feature.BLUETOOTH), p("bluetooth settings kholo"))
+        // "data" inside a normal sentence must NOT switch mobile data
+        assertTrue(p("rahul ko data bhejo") !is Command.Toggle)
+    }
+
+    @Test fun fullControlSystem() {
+        assertEquals(Command.Brightness(100), p("brightness full karo"))
+        assertEquals(Command.Brightness(50), p("brightness fifty percent"))
+        assertEquals(Command.Brightness(null, -25), p("brightness kam karo"))
+        assertEquals(Command.Brightness(null, 25), p("brightness badhao"))
+        assertEquals(Command.Screenshot, p("screenshot lo"))
+        assertEquals(Command.LockScreen, p("phone lock karo"))
+        assertEquals(Command.PowerMenu, p("power menu"))
+        assertEquals(Command.BatteryLevel, p("battery kitni hai"))
+        assertEquals(Command.Mute, p("mute karo"))
+        assertEquals(Command.SilentMode, p("phone silent karo"))
+        assertEquals(Command.VibrateMode, p("vibrate mode"))
+        assertEquals(Command.RingMode, p("normal mode"))
+    }
+
+    @Test fun fullControlCallsMediaNotifications() {
+        assertEquals(Command.AnswerCall, p("call uthao"))
+        assertEquals(Command.EndCall, p("call kaato"))
+        assertEquals(Command.EndCall, p("reject call"))
+        assertEquals(Command.MediaPlay, p("gaana chalao"))
+        assertEquals(Command.MediaPause, p("music band karo"))
+        assertEquals(Command.MediaNext, p("agla gaana"))
+        assertEquals(Command.MediaPrevious, p("previous song"))
+        assertEquals(Command.ReadNotifications, p("notifications padho"))
+        assertEquals(Command.ReadNotifications, p("read my messages"))
+        assertEquals(Command.ClearNotifications, p("clear notifications"))
+        assertEquals(Command.Notifications, p("notifications"))
+    }
+
+    @Test fun fullControlScreen() {
+        assertEquals(Command.Click("subscribe"), p("click on subscribe button"))
+        assertEquals(Command.Click("like"), p("like button dabao"))
+        assertEquals(Command.Click("settings"), p("settings pe click karo"))
+        assertEquals(Command.Click("photo", long = true), p("long press photo"))
+        assertEquals(Command.Swipe(Command.Dir.UP), p("next reel"))
+        assertEquals(Command.Swipe(Command.Dir.LEFT), p("swipe left"))
+        assertEquals(Command.YoutubeSearch("arijit singh songs"), p("youtube pe arijit singh songs chalao"))
+        assertEquals(Command.YoutubeSearch("despacito"), p("play despacito"))
+        assertEquals(Command.WebSearch("weather in mumbai"), p("google pe weather in mumbai search karo"))
+        // plain "open youtube" / "youtube chalao" still just opens the app
+        assertEquals(Command.OpenApp("youtube"), p("youtube chalao"))
+        assertEquals(Command.OpenApp("google"), p("google kholo"))
+    }
+
     @Test fun numbers() {
         assertEquals("9876543210", NumberWords.phoneNumber("nine eight seven six five four three two one zero"))
         assertEquals(null, NumberWords.phoneNumber("rahul"))
