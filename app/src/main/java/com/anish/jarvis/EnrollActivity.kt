@@ -30,6 +30,8 @@ class EnrollActivity : Activity(), RecognitionListener {
     private lateinit var tvPhrase: TextView
     private lateinit var tvStatus: TextView
     private lateinit var btn: Button
+    private lateinit var orb: ReactorView
+    private lateinit var tvDots: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +40,8 @@ class EnrollActivity : Activity(), RecognitionListener {
         tvPhrase = findViewById(R.id.tvPhrase)
         tvStatus = findViewById(R.id.tvEnrollStatus)
         btn = findViewById(R.id.btnEnrollStart)
+        orb = findViewById(R.id.enrollOrb)
+        tvDots = findViewById(R.id.tvDots)
 
         // The microphone can only be used by one recogniser at a time.
         if (JarvisService.isRunning) stopService(Intent(this, JarvisService::class.java))
@@ -50,6 +54,7 @@ class EnrollActivity : Activity(), RecognitionListener {
 
     private fun showPhrase() {
         tvProgress.text = "Sentence ${samples.size + 1} of ${phrases.size}"
+        tvDots.text = (0 until phrases.size).joinToString(" ") { if (it < samples.size) "●" else "○" }
         tvPhrase.text = phrases[samples.size]
     }
 
@@ -63,7 +68,9 @@ class EnrollActivity : Activity(), RecognitionListener {
                     if (isFinishing) { rec.close(); return@runOnUiThread }
                     recognizer = rec
                     speech = SpeechService(rec, VoskEngine.SAMPLE_RATE).also { it.startListening(this) }
-                    tvStatus.text = "🎙  Listening… read the sentence above clearly."
+                    tvStatus.text = "Listening… read the sentence above clearly."
+                    orb.active = true
+                    btn.text = "Listening…"
                 }
             } catch (e: Exception) {
                 runOnUiThread {
@@ -106,10 +113,12 @@ class EnrollActivity : Activity(), RecognitionListener {
         val suggested = VoiceProfile.save(this, samples)
         Prefs.setThreshold(this, suggested)
         tvProgress.text = "Done"
+        tvDots.text = (0 until phrases.size).joinToString(" ") { "●" }
+        orb.active = false
         tvPhrase.text = "Voice lock is ON 🔒"
         tvStatus.text = "Your voice-print is saved on this phone only.\n" +
             "Voice-match threshold set to %.2f (you can change it in Settings).".format(suggested)
-        btn.text = "Finish"
+        btn.text = "Finish ✓"
         btn.isEnabled = true
         JarvisLog.add("Voice enrolled (${samples.size} samples), threshold %.2f".format(suggested))
     }

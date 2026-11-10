@@ -1,58 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="20dp">
+    android:fillViewport="true">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Voice lock setup"
-        android:textColor="@color/accent"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="22dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:text="Sit in a quiet place and read each sentence aloud in your normal voice. Jarvis stores only a numeric voice-print on this phone — no audio is saved."
-        android:textColor="@color/muted" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:text="Voice lock"
+            android:textColor="@color/text"
+            android:textSize="26sp" />
 
-    <TextView
-        android:id="@+id/tvProgress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:textColor="@color/muted"
-        android:textSize="14sp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Read each sentence aloud in your normal voice, in a quiet place. Only a numeric voice-print is saved on this phone. No audio is kept."
+            android:textColor="@color/muted"
+            android:textSize="13sp" />
 
-    <TextView
-        android:id="@+id/tvPhrase"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="@color/card"
-        android:padding="18dp"
-        android:textColor="@color/text"
-        android:textSize="22sp" />
+        <com.anish.jarvis.ReactorView
+            android:id="@+id/enrollOrb"
+            android:layout_width="190dp"
+            android:layout_height="190dp"
+            android:layout_marginTop="18dp" />
 
-    <TextView
-        android:id="@+id/tvEnrollStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:textColor="@color/text"
-        android:textSize="15sp" />
+        <TextView
+            android:id="@+id/tvDots"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:letterSpacing="0.4"
+            android:textColor="@color/accent"
+            android:textSize="18sp" />
 
-    <Button
-        android:id="@+id/btnEnrollStart"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:minHeight="60dp"
-        android:text="Start recording"
-        android:textAllCaps="false"
-        android:textSize="18sp" />
-</LinearLayout>
+        <TextView
+            android:id="@+id/tvProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/muted"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            style="@style/Card"
+            android:layout_marginTop="14dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="READ THIS ALOUD"
+                android:letterSpacing="0.15"
+                android:textColor="@color/accent"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tvPhrase"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="sans-serif-medium"
+                android:lineSpacingExtra="4dp"
+                android:textColor="@color/text"
+                android:textSize="21sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvEnrollStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:textColor="@color/text"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnEnrollStart"
+            style="@style/PrimaryBtn"
+            android:layout_marginTop="20dp"
+            android:text="🎙  Start recording" />
+    </LinearLayout>
+</ScrollView>

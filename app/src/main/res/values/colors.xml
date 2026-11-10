@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#0B1220</color>
-    <color name="card">#141E33</color>
+    <color name="bg">#060B18</color>
+    <color name="bg2">#0C1730</color>
+    <color name="card">#101A31</color>
+    <color name="card_stroke">#1E2B4A</color>
     <color name="accent">#22D3EE</color>
-    <color name="text">#E6EDF7</color>
-    <color name="muted">#8DA2C0</color>
-    <color name="ic_bg">#0B1220</color>
+    <color name="accent2">#6366F1</color>
+    <color name="ok">#34D399</color>
+    <color name="warn">#FBBF24</color>
+    <color name="text">#EAF2FF</color>
+    <color name="muted">#8193B2</color>
+    <color name="ic_bg">#060B18</color>
 </resources>

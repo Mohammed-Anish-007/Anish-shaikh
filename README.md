@@ -85,12 +85,30 @@ You can also say just **"Jarvis"**, wait for **"Yes?"**, and then give the comma
 
 ---
 
-## Privacy
+## Privacy & tech stack
 
-- Speech recognition runs on the phone ([Vosk](https://alphacephei.com/vosk/), Kaldi-based).
-- The voice-print, settings and log are stored in the app's private storage. Backup is disabled (`allowBackup=false`).
-- The only network use is downloading the models from alphacephei.com. Nothing is uploaded, ever.
-- The log is kept only in memory and is cleared when the app closes.
+There is **no server and no cloud backend**. Everything runs inside the app on your phone.
+
+| Part | What is used | Where it runs |
+|---|---|---|
+| App | Kotlin, Android SDK (min Android 8) | Phone |
+| Speech → text | [Vosk](https://alphacephei.com/vosk/) (Kaldi), small English-India or Hindi model | Phone, offline |
+| Voice lock | Vosk speaker model (x-vector) + cosine similarity | Phone, offline |
+| Jarvis's voice | Android's built-in Text-to-Speech | Phone (see note below) |
+| Phone control | Accessibility service, Notification listener, Android intents | Phone |
+| Libraries | `androidx.core`, `vosk-android`, `jna` only. No analytics, ads, Firebase or tracking SDKs | — |
+
+**What is stored, and where**
+- `files/models/`: the downloaded speech models (public files, no personal data)
+- `files/voiceprint.json`: your voice-print, 128 numbers. **No audio is ever recorded to disk.**
+- Settings (wake words, strictness, country code) in private app preferences
+- Conversation log, notifications and contacts are held **in memory only** and disappear when the app closes
+- App backup is disabled (`allowBackup=false`), so none of this goes to Google Drive backup
+
+**When the internet is used**
+- Only once, to download the models from alphacephei.com. Nothing is uploaded.
+- Actions you ask for use their own apps' networks, of course: a WhatsApp message goes via WhatsApp, an SMS via your carrier, a YouTube or Google search opens those apps.
+- Note on Jarvis's spoken replies: they use your phone's TTS engine (usually Google TTS). It works offline when the voice for that language is downloaded on the phone (Settings → Text-to-speech → install voice data). If it isn't, the engine may use its online voice.
 
 ---
 
