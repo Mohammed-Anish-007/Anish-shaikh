@@ -184,12 +184,15 @@ check(target >= 34, f"targetSdkVersion {target} (modern Android security rules a
 sig = subprocess.run([APKSIGNER, "verify", "--print-certs", "-v", APK], capture_output=True, text=True)
 check(sig.returncode == 0 and re.search(r"Verified using v[234] scheme.*: true", sig.stdout) is not None,
       "APK signature valid (v2+ scheme)")
-cert = re.search(r"Signer #1 certificate SHA-256 digest: ([0-9a-f]+)", sig.stdout)
-public_key = cert and os.environ.get("PUBLIC_KEY_SHA256", "") == cert.group(1)
-check(not public_key,
-      "Signed with a PRIVATE key" if not public_key else
-      "Signed with the PUBLIC repo key — add the JARVIS_KEYSTORE_* secrets so nobody else can sign updates",
-      warn=True)
+certs = re.findall(r"certificate SHA-256 digest: ([0-9a-f]{64})", sig.stdout)
+public_fp = os.environ.get("PUBLIC_KEY_SHA256", "").lower()
+if not certs:
+    check(False, "Could not read the signing certificate — treating the key as UNKNOWN", warn=True)
+elif public_fp and public_fp in certs:
+    check(False, "Signed with the PUBLIC repo key (" + certs[0][:16] + "…) — add the JARVIS_KEYSTORE_* "
+          "secrets so nobody else can sign updates", warn=True)
+else:
+    check(True, "Signed with a private key (" + certs[0][:16] + "…)")
 
 # report
 width = max(len(m) for _, m in results)
@@ -198,7 +201,8 @@ for status, msg in results:
     icon = {"PASS": "✅", "WARN": "⚠️ ", "FAIL": "❌"}[status]
     print(f"{icon} {status}  {msg}")
 fails = [m for s, m in results if s == "FAIL"]
-print(f"\n{len(results) - len(fails)} passed, {len(fails)} failed")
+warns = [m for s, m in results if s == "WARN"]
+print(f"\n{len(results) - len(fails) - len(warns)} passed, {len(warns)} warnings, {len(fails)} failed")
 
 summary = os.environ.get("GITHUB_STEP_SUMMARY")
 if summary:
