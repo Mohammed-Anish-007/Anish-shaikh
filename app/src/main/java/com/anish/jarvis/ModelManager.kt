@@ -5,7 +5,7 @@ import java.io.File
 import java.io.IOException
 
 /**
- * The Vosk offline models ship INSIDE the APK (app/src/main/assets/models/*.zip) and are
+ * The Vosk offline models ship INSIDE the APK (app/src/main/assets/models, one zip per model) and are
  * unpacked once into private app storage. The app has no INTERNET permission at all.
  * The zips are checksum-verified at build time (models.sha256) and protected by the APK signature.
  */
