@@ -65,19 +65,20 @@ You can also say just **"Jarvis"**, wait for **"Yes?"**, and then give the comma
 1. Open this repo on GitHub, go to **Releases**, open **`jarvis-latest`**, and download **`Jarvis-Offline.apk`**.
    (You can also go to Actions, pick the latest run, and download the *Jarvis-Offline-APK* artifact.)
 2. Open the APK on your phone and allow "Install unknown apps".
-3. Open **Jarvis** and work through the steps from top to bottom:
-   - **① Download offline models** (about 50 MB, one time, needs internet)
-   - **② Grant permissions** (microphone, contacts, phone, SMS, notifications)
-   - **③ Enable Jarvis Accessibility.** This is needed for typing, Send, back/home and opening apps from the background.
-     - On **Android 13+**, if the switch is greyed out ("Restricted setting"): open *Settings → Apps → Jarvis → ⋮ (top right) → Allow restricted settings*, then try again.
-   - **④ Display over other apps** (optional, helps on some phones such as Xiaomi, Oppo and Vivo)
-   - **⑤ Record MY voice**
-   - **⑥ Allow brightness control** (optional)
-   - **⑦ Allow reading notifications aloud** (optional)
-4. Tap **▶ Start Jarvis**. A notification shows while it is listening. Now say *"Jarvis, open YouTube"*.
+3. Open **Jarvis** and tap **⚡ Set up everything**. It opens each setting one after another; allow it and press Back:
+   1. **Permissions** (microphone, contacts, calls, SMS, notifications)
+   2. **Phone control** (Accessibility → Jarvis → On)
+      - On **Android 13+**, if the switch is greyed out ("Restricted setting"), Jarvis shows you what to do: *App info → ⋮ → Allow restricted settings*. Then it reopens Accessibility for you.
+   3. **Record my voice** (voice lock)
+   4. **Unrestricted battery** (one tap) and **Autostart** (on Xiaomi, Oppo, Realme, Vivo and similar phones)
+   5. Optional: display over other apps, brightness control, reading notifications aloud, Do Not Disturb access
+
+   The voice brain is **built into the app**, so no download and no internet are needed.
+4. **Tap the glowing core** to start Jarvis. Now say *"Jarvis, open YouTube"*.
 
 ### Tips
-- **Battery:** On Xiaomi, Oppo, Vivo, Realme or Samsung phones, set Jarvis's battery setting to *No restrictions / Don't optimise*, or the phone may stop the service.
+- **Battery and Autostart:** the setup wizard asks for "Unrestricted battery" with one tap and opens your phone brand's Autostart page (Xiaomi, Oppo, Realme, Vivo, Huawei and others).
+- **After a reboot:** a "Jarvis is ready" notification appears. Tap it and Jarvis starts listening again. Android does not let any app turn the microphone on by itself after a reboot.
 - **Wake word not detected?** Look at the log to see what Jarvis heard instead of "Jarvis" (for example "service"), and add that word to the **Wake words** setting.
 - **Hindi model:** Choose *Hindi* in setup if you want to speak in Hindi. Contact and app names are matched by sound, so "राहुल" finds the contact "Rahul".
 - **WhatsApp numbers** without a country code get **+91** added. You can change this in Settings.
@@ -99,25 +100,35 @@ There is **no server and no cloud backend**. Everything runs inside the app on y
 | Libraries | `androidx.core`, `vosk-android`, `jna` only. No analytics, ads, Firebase or tracking SDKs | — |
 
 **What is stored, and where**
-- `files/models/`: the downloaded speech models (public files, no personal data)
-- `files/voiceprint.json`: your voice-print, 128 numbers. **No audio is ever recorded to disk.**
+- `files/models/`: the unpacked speech models (public files, no personal data)
+- `files/voiceprint.bin`: your voice-print (128 numbers), **encrypted with a hardware Android Keystore key**. **No audio is ever recorded to disk.**
 - Settings (wake words, strictness, country code) in private app preferences
 - Conversation log, notifications and contacts are held **in memory only** and disappear when the app closes
 - App backup is disabled (`allowBackup=false`), so none of this goes to Google Drive backup
 
-**When the internet is used**
-- Only once, to download the models from alphacephei.com. Nothing is uploaded.
+**Internet: none.** The app has **no INTERNET permission**, so Android blocks it from sending anything. The models are built into the APK.
 - Actions you ask for use their own apps' networks, of course: a WhatsApp message goes via WhatsApp, an SMS via your carrier, a YouTube or Google search opens those apps.
 - Note on Jarvis's spoken replies: they use your phone's TTS engine (usually Google TTS). It works offline when the voice for that language is downloaded on the phone (Settings → Text-to-speech → install voice data). If it isn't, the engine may use its online voice.
 
 ---
+
+## Security
+
+See **[SECURITY.md](SECURITY.md)** for every protection and how it is tested. Each release also includes `security-audit.txt`, the automatic audit of that exact APK.
+
+### Use your own signing key (recommended, because this repo is public)
+1. On a computer, run `keytool -genkeypair -v -keystore jarvis.jks -alias jarvis -keyalg RSA -keysize 4096 -validity 10000`
+2. In GitHub, go to repo → Settings → Secrets and variables → Actions and add:
+   `JARVIS_KEYSTORE_B64` (output of `base64 -w0 jarvis.jks`), `JARVIS_KEYSTORE_PASSWORD`, `JARVIS_KEY_ALIAS` (`jarvis`) and `JARVIS_KEY_PASSWORD`
+3. Uninstall the old Jarvis **once**, because the signature changes, then install the new APK. After that, nobody else can sign a Jarvis update.
 
 ## Build it yourself
 
 Every push builds the APK in GitHub Actions (`.github/workflows/build-apk.yml`). To build locally:
 
 ```bash
-gradle assembleDebug      # needs Android SDK + JDK 17, Gradle 8.9
+./scripts/fetch_models.sh # downloads + checksum-verifies the bundled models
+gradle assembleRelease    # needs Android SDK + JDK 17, Gradle 8.9
 gradle testDebugUnitTest  # command-parser unit tests
 ```
 

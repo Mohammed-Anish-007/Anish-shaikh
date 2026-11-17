@@ -138,6 +138,12 @@
                 android:max="100"
                 android:progressDrawable="@drawable/progress_bar" />
 
+            <Button
+                android:id="@+id/btnWizard"
+                style="@style/PrimaryBtn"
+                android:layout_marginTop="14dp"
+                android:text="⚡  Set up everything (one by one)" />
+
             <LinearLayout
                 android:id="@+id/setupList"
                 android:layout_width="match_parent"

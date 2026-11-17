@@ -83,3 +83,6 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+
+# Vosk models are downloaded at build time (scripts/fetch_models.sh)
+app/src/main/assets/models/

@@ -2,6 +2,8 @@ package com.anish.jarvis
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
+import android.app.KeyguardManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,6 +18,7 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.CheckBox
@@ -30,6 +33,13 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 
 class MainActivity : Activity() {
+
+    companion object {
+        const val EXTRA_AUTOSTART = "autostart"
+        private const val REQ_PERMS = 1
+        private const val REQ_AUTH = 2
+        private const val AUTH_WINDOW_MS = 5 * 60_000L
+    }
 
     private lateinit var orb: ReactorView
     private lateinit var tvState: TextView
@@ -53,6 +63,15 @@ class MainActivity : Activity() {
     private val logListener: () -> Unit = { renderChat() }
     private var downloading = false
     private var downloadMsg = ""
+
+    // "Set up everything" wizard
+    private var wizard = false
+    private val wizardTried = mutableSetOf<String>()
+    private var lastStepKey: String? = null
+
+    // owner check (phone lock) before settings / typed commands
+    private var authUntil = 0L
+    private var pendingAuth: (() -> Unit)? = null
     private var lastRunning: Boolean? = null
 
     private val poll = object : Runnable {
@@ -74,6 +93,8 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Hide Jarvis's screen from screenshots, screen recorders and the recent-apps preview.
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(R.layout.activity_main)
 
         orb = findViewById(R.id.orb)
@@ -102,8 +123,8 @@ class MainActivity : Activity() {
         buildChips()
         loadSettings()
 
-        rbEn.setOnClickListener { Prefs.setLanguage(this, "en"); refresh() }
-        rbHi.setOnClickListener { Prefs.setLanguage(this, "hi"); refresh() }
+        rbEn.setOnClickListener { Prefs.setLanguage(this, "en"); refresh(); prepareModels() }
+        rbHi.setOnClickListener { Prefs.setLanguage(this, "hi"); refresh(); prepareModels() }
         sbThreshold.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) = showThreshold(p / 100f)
             override fun onStartTrackingTouch(sb: SeekBar?) {}
@@ -114,11 +135,17 @@ class MainActivity : Activity() {
         val arrow = findViewById<TextView>(R.id.tvSettingsArrow)
         findViewById<View>(R.id.settingsHeader).setOnClickListener {
             val open = body.visibility != View.VISIBLE
-            body.visibility = if (open) View.VISIBLE else View.GONE
-            arrow.text = if (open) "▴" else "▾"
+            val toggle = {
+                body.visibility = if (open) View.VISIBLE else View.GONE
+                arrow.text = if (open) "▴" else "▾"
+            }
+            if (open) requireOwner(toggle) else toggle()
         }
-        findViewById<Button>(R.id.btnSave).setOnClickListener { saveSettings(); toast("Saved ✓") }
-        findViewById<View>(R.id.btnReEnroll).setOnClickListener { openEnroll() }
+        findViewById<Button>(R.id.btnSave).setOnClickListener { requireOwner { saveSettings(); toast("Saved ✓") } }
+        findViewById<View>(R.id.btnReEnroll).setOnClickListener { requireOwner { openEnroll() } }
+        findViewById<View>(R.id.btnWizard).setOnClickListener { startWizard() }
+
+        if (intent?.getBooleanExtra(EXTRA_AUTOSTART, false) == true) main.postDelayed({ startIfReady() }, 400)
 
         findViewById<View>(R.id.btnTest).setOnClickListener { runTest(etTest.text.toString()) }
         etTest.setOnEditorActionListener { _, action, _ ->
@@ -132,6 +159,26 @@ class MainActivity : Activity() {
         renderChat()
         refresh()
         main.post(poll)
+        if (!ModelManager.allReady(this)) prepareModels()
+        var paused = false
+        if (lastStepKey == "a11y_info") {
+            // back from "Allow restricted settings" → straight to Accessibility again
+            lastStepKey = "a11y"
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            paused = true
+        } else if (lastStepKey == "a11y" && !a11yEnabled()) {
+            paused = showRestrictedSettingsHelp()
+        }
+        if (wizard && !paused) main.postDelayed({ nextWizardStep() }, 700)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent?.getBooleanExtra(EXTRA_AUTOSTART, false) == true) startIfReady()
+    }
+
+    private fun startIfReady() {
+        if (!JarvisService.isRunning) toggleService()
     }
 
     override fun onPause() {
@@ -195,6 +242,7 @@ class MainActivity : Activity() {
     // ------------------------------------------------------------------ setup checklist
 
     private class Step(
+        val key: String,
         val title: String,
         val subtitle: String,
         val done: Boolean,
@@ -222,49 +270,129 @@ class MainActivity : Activity() {
     }
 
     private fun steps(): List<Step> {
-        val model = ModelManager.speechModel(this)
         val lang = if (Prefs.language(this) == "hi") "Hindi" else "English / Hinglish"
-        return listOf(
+        val list = mutableListOf(
             Step(
-                "Download voice brain",
+                "models", "Voice brain",
                 when {
-                    downloading -> downloadMsg.ifEmpty { "Downloading…" }
-                    ModelManager.allReady(this) -> "$lang model ready · works offline"
-                    else -> "One time · about 50 MB · $lang (change in Settings)"
+                    downloading -> downloadMsg.ifEmpty { "Preparing…" }
+                    ModelManager.allReady(this) -> "$lang · built in · works offline"
+                    else -> "Preparing on first launch…"
                 },
-                ModelManager.isReady(this, model) && ModelManager.isReady(this, ModelManager.SPEAKER), false
-            ) { downloadModels() },
+                ModelManager.allReady(this), false
+            ) { prepareModels() },
             Step(
-                "Allow permissions", "Microphone, contacts, calls, SMS",
+                "perms", "Allow permissions", "Microphone, contacts, calls, SMS, notifications",
                 requiredPerms().all { granted(it) }, false
             ) { requestPerms() },
             Step(
-                "Turn on phone control", "Accessibility · typing, taps, Wi-Fi, swipes",
+                "a11y", "Turn on phone control", "Accessibility → Jarvis → On",
                 a11yEnabled(), false
             ) {
                 startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                toast("Open \"Jarvis\" and turn it ON")
+                toast("Tap \"Jarvis\" (it may be under \"Installed apps\") and turn it ON")
             },
             Step(
-                "Record my voice", "Voice lock · only you can command Jarvis",
+                "voice", "Record my voice", "Voice lock · only you can command Jarvis",
                 VoiceProfile.isEnrolled(this), false
             ) { openEnroll() },
             Step(
-                "Open apps from background", "Display over other apps",
+                "battery", "Keep running in background", "Battery → Unrestricted (one tap)",
+                PhoneSetup.ignoresBatteryOptimizations(this), false
+            ) {
+                try { startActivity(PhoneSetup.batteryIntent(this)) }
+                catch (e: Exception) { startActivity(PhoneSetup.appInfoIntent(this)) }
+            }
+        )
+        if (PhoneSetup.needsAutostart()) list += Step(
+            "autostart", "Allow Autostart", "${Build.MANUFACTURER} phones stop apps without this",
+            Prefs.flag(this, "autostart_done"), false
+        ) {
+            Prefs.setFlag(this, "autostart_done", true)
+            PhoneSetup.openAutostart(this)
+            toast("Turn Autostart ON for Jarvis")
+        }
+        list += listOf(
+            Step(
+                "overlay", "Open apps from background", "Display over other apps",
                 Settings.canDrawOverlays(this), true
             ) { startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))) },
             Step(
-                "Brightness control", "Modify system settings",
+                "brightness", "Brightness control", "Modify system settings",
                 Settings.System.canWrite(this), true
             ) { startActivity(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName"))) },
             Step(
-                "Read notifications aloud", "Notification access",
+                "notif", "Read notifications aloud", "Notification access",
                 NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName), true
             ) {
                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
                 toast("Find \"Jarvis\" and allow it")
+            },
+            Step(
+                "dnd", "Silent mode control", "Do Not Disturb access",
+                PhoneSetup.hasDndAccess(this), true
+            ) {
+                startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+                toast("Find \"Jarvis\" and allow it")
             }
         )
+        return list
+    }
+
+    // ------------------------------------------------------------------ one-tap wizard
+
+    private fun startWizard() {
+        wizard = true
+        wizardTried.clear()
+        toast("I'll open each setting one by one. Allow it and press Back.")
+        nextWizardStep()
+    }
+
+    private var lastAdvance = 0L
+
+    private fun nextWizardStep() {
+        if (!wizard || isFinishing || pendingAuth != null) return
+        val now = System.currentTimeMillis()
+        if (now - lastAdvance < 1500) return   // permission popups trigger resume + result; advance once
+        lastAdvance = now
+        val next = steps().firstOrNull { !it.done && it.key != "models" && it.key !in wizardTried }
+        if (next == null) {
+            wizard = false
+            refresh()
+            val missing = steps().count { !it.done && !it.optional }
+            toast(if (missing == 0) "All set ✓  Tap the core to start Jarvis" else "Almost done – $missing step(s) still need you")
+            return
+        }
+        wizardTried += next.key
+        runStep(next)
+    }
+
+    private fun runStep(st: Step) {
+        lastStepKey = st.key
+        st.action()
+    }
+
+    /** Android 13+ blocks Accessibility for apps installed from an APK until you allow it. */
+    private fun showRestrictedSettingsHelp(): Boolean {
+        lastStepKey = null
+        if (Build.VERSION.SDK_INT < 33) return false
+        AlertDialog.Builder(this)
+            .setTitle("Switch is greyed out?")
+            .setMessage(
+                "Android protects Accessibility for apps installed from an APK.\n\n" +
+                    "1. Tap \"Open App info\" below\n" +
+                    "2. Tap ⋮ (top-right corner)\n" +
+                    "3. Tap \"Allow restricted settings\" and confirm with your PIN\n" +
+                    "4. Come back and turn on Jarvis in Accessibility"
+            )
+            .setPositiveButton("Open App info") { _, _ ->
+                lastStepKey = "a11y_info"
+                startActivity(PhoneSetup.appInfoIntent(this))
+            }
+            .setNegativeButton("Skip") { _, _ -> if (wizard) nextWizardStep() }
+            .setCancelable(false)
+            .show()
+        return true
     }
 
     private fun renderSetup() {
@@ -284,7 +412,7 @@ class MainActivity : Activity() {
             val attrs = obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground))
             background = attrs.getDrawable(0)
             attrs.recycle()
-            setOnClickListener { if (!s.done || n == 1) s.action() }
+            setOnClickListener { if (!s.done) runStep(s) }
         }
         val badge = TextView(this).apply {
             text = if (s.done) "✓" else n.toString()
@@ -383,6 +511,11 @@ class MainActivity : Activity() {
     private fun runTest(raw: String) {
         val t = raw.trim()
         if (t.isEmpty()) return
+        // Typed commands skip the voice lock, so they need your phone lock instead.
+        requireOwner { runTestNow(t) }
+    }
+
+    private fun runTestNow(t: String) {
         etTest.setText("")
         val cmd = CommandParser.parse(WakeWord.split(t, Prefs.wakeWords(this)).rest)
         JarvisLog.add("Test: $t → $cmd")
@@ -416,39 +549,78 @@ class MainActivity : Activity() {
 
     private fun requestPerms() {
         val missing = requiredPerms().filter { !granted(it) }
-        if (missing.isEmpty()) toast("All permissions already granted ✓")
-        else requestPermissions(missing.toTypedArray(), 1)
+        if (missing.isEmpty()) { toast("All permissions already granted ✓"); return }
+        if (Prefs.flag(this, "perms_asked") && missing.none { shouldShowRequestPermissionRationale(it) }) {
+            // Android won't show the popup again ("Don't ask again"), so open App info → Permissions.
+            toast("Open Permissions and allow everything for Jarvis")
+            startActivity(PhoneSetup.appInfoIntent(this))
+            return
+        }
+        Prefs.setFlag(this, "perms_asked", true)
+        requestPermissions(missing.toTypedArray(), REQ_PERMS)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         refresh()
+        if (wizard) main.postDelayed({ nextWizardStep() }, 400)
+    }
+
+    // ------------------------------------------------------------------ owner check
+
+    /** Runs [action] only after the phone's own PIN / pattern / fingerprint confirms it's you. */
+    private fun requireOwner(action: () -> Unit) {
+        val now = System.currentTimeMillis()
+        if (now < authUntil) { action(); return }
+        val km = getSystemService(KEYGUARD_SERVICE) as KeyguardManager
+        if (!km.isDeviceSecure) {
+            toast("Tip: set a screen lock on your phone so nobody else can change Jarvis")
+            action(); return
+        }
+        @Suppress("DEPRECATION")
+        val i = km.createConfirmDeviceCredentialIntent("Jarvis", "Confirm it's you")
+        if (i == null) { action(); return }
+        pendingAuth = action
+        startActivityForResult(i, REQ_AUTH)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQ_AUTH) return
+        val action = pendingAuth
+        pendingAuth = null
+        if (resultCode == RESULT_OK) {
+            authUntil = System.currentTimeMillis() + AUTH_WINDOW_MS
+            action?.invoke()
+        } else {
+            toast("Not confirmed")
+        }
     }
 
     private fun openEnroll() {
         when {
-            !ModelManager.allReady(this) -> toast("First download the voice brain (step 1)")
+            !ModelManager.allReady(this) -> toast("Voice brain is still being prepared, please wait a moment")
             !granted(Manifest.permission.RECORD_AUDIO) -> requestPerms()
             else -> startActivity(Intent(this, EnrollActivity::class.java))
         }
     }
 
-    private fun downloadModels() {
-        if (downloading) return
-        val todo = listOf(ModelManager.speechModel(this), ModelManager.SPEAKER).filter { !ModelManager.isReady(this, it) }
-        if (todo.isEmpty()) { toast("Already downloaded ✓"); return }
+    private fun prepareModels() {
+        if (downloading || ModelManager.allReady(this)) return
         downloading = true
-        downloadMsg = "Starting download…"
+        downloadMsg = "Preparing voice brain…"
         refresh()
         Thread {
             try {
-                for (m in todo) ModelManager.download(this, m) { msg ->
+                ModelManager.prepareAll(this) { msg ->
                     downloadMsg = msg
                     runOnUiThread { renderSetup() }
                 }
-                JarvisLog.add("Voice brain ready. Jarvis now works without internet.")
+                JarvisLog.add("Voice brain ready. Everything runs offline on this phone.")
             } catch (e: Exception) {
-                JarvisLog.add("Download failed: ${e.message}. Check internet and try again.")
+                JarvisLog.add("Could not prepare the voice brain: ${e.message}")
             } finally {
                 runOnUiThread { downloading = false; refresh() }
             }
@@ -461,7 +633,7 @@ class MainActivity : Activity() {
         } else {
             saveSettings()
             when {
-                !ModelManager.allReady(this) -> { toast("First download the voice brain (step 1)"); return }
+                !ModelManager.allReady(this) -> { toast("Voice brain is still being prepared, please wait a moment"); return }
                 !granted(Manifest.permission.RECORD_AUDIO) -> { requestPerms(); return }
                 !VoiceProfile.isEnrolled(this) -> { toast("Record your voice first (step 4). Jarvis only obeys you."); return }
             }

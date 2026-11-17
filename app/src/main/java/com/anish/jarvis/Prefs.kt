@@ -25,4 +25,7 @@ object Prefs {
 
     fun countryCode(ctx: Context): String = sp(ctx).getString("country_code", "91") ?: "91"
     fun setCountryCode(ctx: Context, v: String) = sp(ctx).edit().putString("country_code", v).apply()
+
+    fun flag(ctx: Context, key: String) = sp(ctx).getBoolean("flag_$key", false)
+    fun setFlag(ctx: Context, key: String, v: Boolean) = sp(ctx).edit().putBoolean("flag_$key", v).apply()
 }

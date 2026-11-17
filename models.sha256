@@ -1,0 +1,5 @@
+# Vosk offline models bundled into the APK.
+# Format: <sha256> <model-name>.  "-" means "not pinned yet" (the build prints the hash).
+- vosk-model-small-en-in-0.4
+- vosk-model-small-hi-0.22
+- vosk-model-spk-0.4

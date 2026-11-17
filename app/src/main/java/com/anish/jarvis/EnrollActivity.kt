@@ -3,6 +3,7 @@ package com.anish.jarvis
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import org.json.JSONObject
@@ -35,6 +36,7 @@ class EnrollActivity : Activity(), RecognitionListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(R.layout.activity_enroll)
         tvProgress = findViewById(R.id.tvProgress)
         tvPhrase = findViewById(R.id.tvPhrase)

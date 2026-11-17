@@ -43,6 +43,7 @@ class JarvisService : Service(), RecognitionListener, TextToSpeech.OnInitListene
     private lateinit var tts: TextToSpeech
     private var ttsReady = false
     private var awaitUntil = 0L
+    private val guard = VoiceGuard { SystemClock.elapsedRealtime() }
     private lateinit var executor: CommandExecutor
     @Volatile private var destroyed = false
 
@@ -137,15 +138,28 @@ class JarvisService : Service(), RecognitionListener, TextToSpeech.OnInitListene
             return
         }
 
-        val score = if (vec != null && frames >= VoiceProfile.MIN_FRAMES) VoiceProfile.score(this, vec) else -1f
-        val ok = score >= Prefs.threshold(this)
-        JarvisLog.add("Heard: \"$text\"  voice=" + "%.2f".format(score) + if (ok) " ✓ owner" else " ✗ rejected")
         val addressed = wake.found || awaiting
-        awaitUntil = 0
-        if (!ok) {
-            if (addressed) say("Sorry, I only follow my owner's voice")
+        if (guard.isLocked()) {
+            JarvisLog.add("(voice lock locked for ${guard.secondsLeft()}s) $text")
             return
         }
+        val profile = VoiceProfile.load(this)
+        val score = if (vec != null && profile != null) VoiceMath.cosine(vec, profile) else -1f
+        val ok = VoiceMath.isOwner(vec, frames, profile, Prefs.threshold(this))
+        JarvisLog.add("Heard: \"$text\"  voice=" + "%.2f".format(score) + if (ok) " ✓ owner" else " ✗ rejected")
+        awaitUntil = 0
+        if (!ok) {
+            if (addressed) {
+                // Count only real attempts to command Jarvis, so background TV/talk can't lock you out.
+                if (score >= 0 && guard.onReject()) {
+                    say("Too many wrong voices. Voice lock is closed for two minutes")
+                } else {
+                    say("Sorry, I only follow my owner's voice")
+                }
+            }
+            return
+        }
+        guard.onAccept()
 
         wakeScreen()
         val cmd = CommandParser.parse(if (wake.found) wake.rest else text)

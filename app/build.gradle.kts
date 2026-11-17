@@ -11,14 +11,17 @@ android {
         applicationId = "com.anish.jarvis"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "3.0"
         ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+            // real phones only (smaller APK)
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
     }
 
-    // A fixed debug key so every CI build can be installed over the previous one.
+    // Release signing: uses YOUR private key when the JARVIS_KEYSTORE_* secrets are set in GitHub,
+    // otherwise falls back to the public key in this repo (so updates still install).
+    val ksPath = System.getenv("JARVIS_KEYSTORE_FILE")
     signingConfigs {
         getByName("debug") {
             storeFile = file("debug.keystore")
@@ -26,13 +29,33 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        create("release") {
+            if (!ksPath.isNullOrBlank()) {
+                storeFile = file(ksPath)
+                storePassword = System.getenv("JARVIS_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("JARVIS_KEY_ALIAS")
+                keyPassword = System.getenv("JARVIS_KEY_PASSWORD")
+            } else {
+                storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
     }
 
     buildTypes {
         release {
+            // not debuggable: nobody can attach a debugger or read Jarvis's private files over USB
+            isDebuggable = false
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
+    }
+
+    androidResources {
+        // keep the bundled model zips as-is
+        noCompress += listOf("zip")
     }
 
     compileOptions {

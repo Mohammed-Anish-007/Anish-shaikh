@@ -10,6 +10,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # SHA-256 of the PUBLIC key in app/debug.keystore – the audit warns if releases are still signed with it
+      PUBLIC_KEY_SHA256: 85df4560945834d860f7f68d2840ce460980ad57d25092a8999d9b1bfcee571e
     steps:
       - uses: actions/checkout@v4
 
@@ -25,19 +28,48 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Unit tests (command parser)
+      - name: Unit tests (command parser + security tests)
         run: gradle --no-daemon testDebugUnitTest
 
-      - name: Build APK
-        run: gradle --no-daemon assembleDebug
+      - name: Download offline models and verify checksums
+        run: ./scripts/fetch_models.sh
+
+      - name: Use private signing key (if the secrets are set)
+        env:
+          KS_B64: ${{ secrets.JARVIS_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.JARVIS_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.JARVIS_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.JARVIS_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/jarvis.jks"
+            {
+              echo "JARVIS_KEYSTORE_FILE=$RUNNER_TEMP/jarvis.jks"
+              echo "JARVIS_KEYSTORE_PASSWORD=$KS_PASS"
+              echo "JARVIS_KEY_ALIAS=$KEY_ALIAS"
+              echo "JARVIS_KEY_PASSWORD=${KEY_PASS:-$KS_PASS}"
+            } >> "$GITHUB_ENV"
+            echo "Signing with the private key from secrets."
+          else
+            echo "::warning::No JARVIS_KEYSTORE_B64 secret – signing with the public repo key."
+          fi
+
+      - name: Build release APK
+        run: gradle --no-daemon assembleRelease
+
+      - name: Security audit of the built APK
+        run: python3 scripts/security_audit.py app/build/outputs/apk/release/app-release.apk
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk Jarvis-Offline.apk
+        run: cp app/build/outputs/apk/release/app-release.apk Jarvis-Offline.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: Jarvis-Offline-APK
-          path: Jarvis-Offline.apk
+          path: |
+            Jarvis-Offline.apk
+            security-audit.txt
+            app/build/reports/tests/
 
       - name: Publish to "jarvis-latest" release
         uses: softprops/action-gh-release@v2
@@ -45,7 +77,11 @@ jobs:
           tag_name: jarvis-latest
           name: Jarvis Offline – latest APK
           prerelease: true
-          files: Jarvis-Offline.apk
+          files: |
+            Jarvis-Offline.apk
+            security-audit.txt
           body: |
             Download **Jarvis-Offline.apk** below and install it on your Android phone (Android 8+).
-            Setup steps are in the README.
+            The speech models are built in and the app has **no internet permission**.
+            `security-audit.txt` shows the automatic security checks this exact APK passed.
+            Setup: open the app and tap **⚡ Set up everything**.
