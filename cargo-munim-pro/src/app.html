@@ -1,0 +1,1546 @@
+<title>Cargo Munim Pro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Mukta:wght@400;600;700&display=swap">
+<style>
+/* Layout: app shell — sticky header; desktop gets a left sidebar, phone gets a bottom bar with a big + ; content is one column of picture tiles, cards and lists; pop-up sheets for every detail */
+:root{
+  --bg:#e8eff0; --surface:#ffffff; --surface2:#f2f7f8; --ink:#0f2a3a; --muted:#546b78; --line:#d0dde2;
+  --accent:#0a6b78; --accent-ink:#ffffff; --deep:#073f48; --cargo:#cc6614; --cargo-bg:#fcebdb;
+  --good:#16794a; --good-bg:#ddf1e4; --bad:#bd3227; --bad-bg:#fae2de; --warn:#946600; --warn-bg:#fbeec9; --info:#2d5fa8; --info-bg:#e1eafa;
+  --paper:#ffffff; --paper-ink:#151515; --paper-line:#9a9a9a;
+  --shadow:0 1px 2px rgba(15,42,58,.08),0 4px 14px rgba(15,42,58,.06);
+  --f-display:"Baloo 2","Mukta",system-ui,sans-serif;
+  --f-body:"Mukta","Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a161d; --surface:#11232c; --surface2:#0e1d25; --ink:#e3edf1; --muted:#91a7b2; --line:#22404b;
+  --accent:#3fb3bf; --accent-ink:#04222a; --deep:#0b2f37; --cargo:#f19a52; --cargo-bg:#3a2410;
+  --good:#52c98a; --good-bg:#0f3220; --bad:#ff8074; --bad-bg:#3b1612; --warn:#f0c255; --warn-bg:#352909; --info:#7fb0ff; --info-bg:#132845;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a161d; --surface:#11232c; --surface2:#0e1d25; --ink:#e3edf1; --muted:#91a7b2; --line:#22404b;
+  --accent:#3fb3bf; --accent-ink:#04222a; --deep:#0b2f37; --cargo:#f19a52; --cargo-bg:#3a2410;
+  --good:#52c98a; --good-bg:#0f3220; --bad:#ff8074; --bad-bg:#3b1612; --warn:#f0c255; --warn-bg:#352909; --info:#7fb0ff; --info-bg:#132845;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.4;margin:0;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--cargo);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--accent)}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:25;background:var(--accent);color:var(--accent-ink);
+  padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top-in{display:flex;align-items:center;gap:8px}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.brand .logo{font-size:30px;line-height:1}
+.brand b{font-family:var(--f-display);font-size:22px;font-weight:800;display:block;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand b em{font-style:normal;font-size:12px;background:var(--cargo);color:#fff;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;letter-spacing:.5px}
+.brand small{opacity:.88;font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbtn{background:rgba(255,255,255,.16);border:0;border-radius:14px;min-width:46px;height:46px;padding:0 10px;font-size:21px;display:flex;align-items:center;justify-content:center;gap:4px;color:inherit;flex:none}
+.tbtn span{font-size:14px;font-weight:700}
+.tbtn.off{opacity:.55}
+.tbtn.mic{background:var(--cargo);color:#fff}
+@media(max-width:520px){.tbtn.hide-sm{display:none}}
+
+.shell{display:block}
+.side{display:none}
+main{max-width:1180px;margin:0 auto;padding-block:16px 140px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px;min-width:0}
+@media(min-width:1000px){
+  .shell{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100% - 62px);background:linear-gradient(to right,var(--surface) 232px,transparent 232px)}
+  .side{display:flex;flex-direction:column;gap:4px;padding:16px 12px;padding-left:max(12px,env(safe-area-inset-left,0px));background:var(--surface);border-right:1px solid var(--line);position:sticky;top:calc(62px + env(safe-area-inset-top,0px));height:calc(100vh - 62px);overflow-y:auto}
+  .side button{border:0;background:none;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;font-weight:700;font-size:17px;text-align:left;color:var(--muted)}
+  .side button .ic{font-size:24px;width:30px;text-align:center}
+  .side button.on{background:var(--surface2);color:var(--accent)}
+  .side .newbtn{background:var(--cargo);color:#fff;justify-content:center;margin-bottom:10px;min-height:54px}
+  .nav{display:none}
+  main{padding-bottom:40px;margin:0}
+}
+h2{font-family:var(--f-display);font-size:25px;margin:0;line-height:1.15;text-wrap:balance;display:flex;align-items:center;gap:8px}
+h3{font-family:var(--f-display);font-size:19px;margin:0;color:var(--muted);font-weight:700}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+.muted{color:var(--muted)}
+.say{background:var(--surface);border:1px solid var(--line);border-radius:999px;width:44px;height:44px;font-size:20px;flex:none}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:14px;padding:10px 14px;font-size:15px;display:flex;gap:10px;align-items:center}
+.note.info{background:var(--info-bg);color:var(--info)}
+
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(min-width:760px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{border:0;text-align:left;border-radius:20px;padding:14px;background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;min-height:128px;position:relative;min-width:0}
+.tile .ic{font-size:38px;line-height:1}
+.tile .lbl{font-weight:700;font-size:17px}
+.tile .val{font-family:var(--f-display);font-weight:800;font-size:25px;line-height:1.1;overflow-wrap:anywhere}
+.tile .sub{font-size:14px;color:var(--muted)}
+.tile.good{background:var(--good-bg)} .tile.good .val{color:var(--good)}
+.tile.bad{background:var(--bad-bg)} .tile.bad .val{color:var(--bad)}
+.tile.cargo{background:var(--cargo-bg)} .tile.cargo .val{color:var(--cargo)}
+.tile.info{background:var(--info-bg)} .tile.info .val{color:var(--info)}
+.arrow{position:absolute;top:12px;right:12px;font-size:24px}
+
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(min-width:760px){.actions{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.act{border:2px solid var(--line);background:var(--surface);border-radius:20px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;font-size:16px;text-align:center;min-height:112px;justify-content:center;min-width:0}
+.act .ic{font-size:42px;line-height:1}
+.act small{font-weight:400;color:var(--muted);font-size:13px}
+.act.good{border-color:var(--good);color:var(--good)} .act.bad{border-color:var(--bad);color:var(--bad)}
+.act.cargo{border-color:var(--cargo);color:var(--cargo)} .act.acc{border-color:var(--accent);color:var(--accent)} .act.info{border-color:var(--info);color:var(--info)}
+.act:active,.tile:active,.card:active{transform:scale(.98)}
+
+.alerts{display:flex;flex-direction:column;gap:8px}
+.alert{border:0;width:100%;text-align:left;display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;font-size:17px;background:var(--surface);border-left:6px solid var(--warn);min-width:0}
+.alert.bad{border-left-color:var(--bad)} .alert.good{border-left-color:var(--good)} .alert.info{border-left-color:var(--info)}
+.alert .ic{font-size:28px;flex:none}
+.alert b{display:block}
+.alert > span:last-child{min-width:0;overflow-wrap:anywhere}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.grid.wide{grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr))}
+.card{border:0;text-align:left;width:100%;background:var(--surface);border-radius:20px;padding:14px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:center;min-width:0}
+.card .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.card .nm{font-weight:700;font-size:19px;line-height:1.2;overflow-wrap:anywhere}
+.pic{width:64px;height:64px;border-radius:16px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:38px;flex:none;overflow:hidden}
+.pic img{width:100%;height:100%;object-fit:cover}
+.pic.big{width:96px;height:96px;font-size:60px;border-radius:22px}
+.pic.sm{width:44px;height:44px;font-size:26px;border-radius:12px}
+.bar{height:12px;border-radius:99px;background:var(--surface2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.bar.low i{background:var(--bad)} .bar.mid i{background:var(--warn)}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 10px;font-size:14px;font-weight:700;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)} .pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.cargo{background:var(--cargo-bg);color:var(--cargo)} .pill.info{background:var(--info-bg);color:var(--info)}
+.amt{font-family:var(--f-display);font-weight:800;font-size:22px;line-height:1.1}
+.amt.good{color:var(--good)} .amt.bad{color:var(--bad)}
+
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-weight:700;font-size:16px;min-height:46px;display:flex;gap:6px;align-items:center}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.ship{background:var(--surface);border-radius:20px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;min-width:0}
+.ship .hd{display:flex;gap:12px;align-items:center}
+.flag{font-size:44px;line-height:1}
+.track{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;position:relative}
+.track::before{content:"";position:absolute;left:10%;right:10%;top:22px;height:4px;background:var(--line);border-radius:4px}
+.stg{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;font-size:12px;text-align:center;color:var(--muted);line-height:1.15}
+.stg .dot{width:46px;height:46px;border-radius:50%;background:var(--surface2);border:3px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:22px;filter:grayscale(1);opacity:.6}
+.stg.done .dot{background:var(--good-bg);border-color:var(--good);filter:none;opacity:1}
+.stg.now .dot{background:var(--cargo-bg);border-color:var(--cargo);filter:none;opacity:1;transform:scale(1.12)}
+.stg.now{color:var(--cargo);font-weight:700}
+.docs-mini{display:flex;gap:4px;flex-wrap:wrap}
+.docs-mini span{font-size:12px;border-radius:8px;padding:1px 6px;background:var(--surface2);color:var(--muted)}
+.docs-mini span.ok{background:var(--good-bg);color:var(--good)}
+
+.btn{border-radius:16px;min-height:52px;padding:8px 16px;font-weight:700;font-size:17px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--surface2);border:2px solid var(--line);text-decoration:none;text-align:center}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.good{background:var(--good);color:#fff;border-color:var(--good)}
+.btn.bad{background:var(--bad);color:#fff;border-color:var(--bad)}
+.btn.wa{background:#1f9e55;color:#fff;border-color:#1f9e55}
+.btn.ghost{background:transparent}
+.btn.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+.btn.wide{width:100%}
+.btn.sm{min-height:42px;font-size:15px;padding:4px 12px;border-radius:12px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.countries{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.cty{flex:none;background:var(--surface);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:92px;box-shadow:var(--shadow);border:0}
+.cty .flag{font-size:38px} .cty small{font-size:13px;color:var(--muted)}
+
+.list{display:flex;flex-direction:column;background:var(--surface);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.li{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);min-width:0;width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0}
+.li:last-child{border-bottom:0}
+.li .body{flex:1;min-width:0}
+.li .t1{font-weight:700;overflow-wrap:anywhere}
+.li .t2{font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.li .ic{font-size:28px;flex:none}
+.li .rt{text-align:right;flex:none}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+.empty-big{background:var(--surface);border-radius:22px;padding:28px 18px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;box-shadow:var(--shadow)}
+.empty-big .ic{font-size:64px}
+
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px))}
+.nav-in{max-width:700px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);align-items:end}
+.nav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;padding:8px 2px;font-size:13px;font-weight:700;color:var(--muted);min-height:64px;justify-content:center}
+.nav button .ic{font-size:27px;line-height:1.1}
+.nav button.on{color:var(--accent)}
+.nav .plus{position:relative;top:-14px;color:var(--cargo)}
+.nav .plus .ic{width:66px;height:66px;border-radius:50%;background:var(--cargo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 4px 14px rgba(204,102,20,.45);border:4px solid var(--surface)}
+
+.sheet-bg{position:fixed;inset:0;z-index:40;background:rgba(5,20,28,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:760px;max-height:94%;overflow-y:auto;border-radius:26px 26px 0 0;
+  padding-block:14px calc(24px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.sheet.xl{max-width:920px}
+@media(min-width:760px){.sheet-bg{align-items:center}.sheet{border-radius:26px;max-height:92%}}
+.sheet-hd{display:flex;align-items:center;gap:10px;position:sticky;top:-14px;background:var(--bg);padding-block:8px;z-index:2}
+.sheet-hd h2{flex:1;min-width:0}
+.x{border:0;background:var(--surface);border-radius:50%;width:48px;height:48px;font-size:22px;flex:none}
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:6px;border-radius:9px;background:var(--line)}
+.steps i.on{background:var(--cargo)}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr));gap:10px}
+.pick.sm{grid-template-columns:repeat(auto-fill,minmax(min(100%,104px),1fr))}
+.pk{border:3px solid transparent;background:var(--surface);border-radius:18px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-weight:700;font-size:16px;box-shadow:var(--shadow);min-width:0;overflow-wrap:anywhere}
+.pk.on{border-color:var(--cargo);background:var(--cargo-bg)}
+.pk .ic{font-size:42px;line-height:1}
+.pk small{font-weight:400;color:var(--muted);font-size:13px}
+.bigchoice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bottom-bar{position:sticky;bottom:-24px;background:var(--bg);padding-block:10px;display:flex;gap:10px;align-items:center}
+
+.npd{background:var(--surface);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.screen{font-family:var(--f-display);font-weight:800;font-size:42px;text-align:right;line-height:1.1;padding:6px 10px;border-radius:14px;background:var(--surface2);overflow-wrap:anywhere;min-height:62px}
+.screen small{font-size:19px;color:var(--muted);font-weight:500}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keys button{border:0;background:var(--surface2);border-radius:14px;height:58px;font-size:28px;font-weight:700;font-family:var(--f-display)}
+.keys button.k-del{color:var(--bad)}
+.hint{font-size:16px;color:var(--muted);text-align:center}
+.eq{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--surface);border-radius:20px;padding:18px;font-size:19px;font-weight:700;box-shadow:var(--shadow);text-align:center}
+.eq .op{font-size:28px;color:var(--muted)}
+.eq .col{display:flex;flex-direction:column;align-items:center;gap:4px;max-width:150px;overflow-wrap:anywhere}
+
+.form{display:flex;flex-direction:column;gap:14px}
+.form label{display:flex;flex-direction:column;gap:6px;font-weight:700;min-width:0}
+.form input,.form select,.form textarea{font:inherit;font-size:18px;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);width:100%;min-height:52px}
+.form .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:12px}
+.iconpick{display:flex;flex-wrap:wrap;gap:8px}
+.iconpick button{width:52px;height:52px;font-size:28px;border-radius:14px;border:3px solid transparent;background:var(--surface)}
+.iconpick button.on{border-color:var(--cargo);background:var(--cargo-bg)}
+textarea.code{font:inherit;font-size:13px;width:100%;min-height:120px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);padding:10px}
+
+.chart{background:var(--surface);border-radius:18px;padding:12px;box-shadow:var(--shadow);min-width:0}
+.chart svg{width:100%;height:auto;display:block}
+.chart .ax{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.chart .grid-l{stroke:var(--line);stroke-width:1}
+.chart .ln-s{stroke:var(--accent);stroke-width:3;fill:none}
+.chart .ln-b{stroke:var(--cargo);stroke-width:3;fill:none;stroke-dasharray:6 4}
+.chart .ar{fill:var(--accent);opacity:.12}
+.chart .pt-s{fill:var(--accent)} .chart .pt-b{fill:var(--cargo)}
+.chart .b-s{fill:var(--accent)} .chart .b-b{fill:var(--cargo)} .chart .b-e{fill:var(--muted)}
+.chart .lbl{fill:var(--ink);font-size:11px;font-weight:700;font-family:var(--f-body)}
+.legend{display:flex;gap:16px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:middle;margin-right:6px}
+.hbars{display:flex;flex-direction:column;gap:10px}
+.hb{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center}
+.hb .nm{font-weight:700;overflow-wrap:anywhere;font-size:16px}
+.hb .v{font-weight:700;font-size:15px}
+.hb .track2{grid-column:1/-1;height:12px;background:var(--surface2);border-radius:9px;overflow:hidden}
+.hb .track2 i{display:block;height:100%;background:var(--accent);border-radius:9px}
+.hb .track2 i.cargo{background:var(--cargo)} .hb .track2 i.bad{background:var(--bad)} .hb .track2 i.warn{background:var(--warn)} .hb .track2 i.good{background:var(--good)}
+.panel{background:var(--surface);border-radius:20px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;min-width:0}
+.two-col{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:16px}
+
+.route{background:var(--surface);border-radius:18px;padding:10px;box-shadow:var(--shadow)}
+.route svg{width:100%;height:auto;display:block}
+.route .sea{fill:var(--info-bg)} .route .path{stroke:var(--info);stroke-width:2.5;fill:none;stroke-dasharray:6 6}
+.route .done{stroke:var(--cargo);stroke-width:4;fill:none}
+.route .port{fill:var(--ink)} .route .pl{fill:var(--ink);font-size:13px;font-weight:700;font-family:var(--f-body)}
+.route .ps{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+
+.docchk{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:8px}
+.docchk button{border:3px solid var(--line);background:var(--surface);border-radius:16px;padding:10px;display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;text-align:left;min-width:0}
+.docchk button .ic{font-size:26px;flex:none}
+.docchk button.ok{border-color:var(--good);background:var(--good-bg);color:var(--good)}
+
+.paper{background:var(--paper);color:var(--paper-ink);border-radius:8px;padding:24px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.45;overflow-x:auto;box-shadow:var(--shadow)}
+.paper table{width:100%;border-collapse:collapse;min-width:560px}
+.paper th,.paper td{border:1px solid var(--paper-line);padding:6px 8px;text-align:left;vertical-align:top}
+.paper th{background:#eef0f1}
+.paper .r{text-align:right}
+.paper h1{font-size:20px;text-align:center;letter-spacing:2px;margin:0 0 12px}
+.paper .meta{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--paper-line);margin-bottom:10px;min-width:560px}
+.paper .meta > div{padding:8px;border:1px solid var(--paper-line)}
+
+.chat{display:flex;flex-direction:column;gap:10px}
+.bub{max-width:88%;padding:10px 14px;border-radius:18px;background:var(--surface);box-shadow:var(--shadow);white-space:pre-wrap;overflow-wrap:anywhere}
+.bub.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink)}
+.micbig{width:120px;height:120px;border-radius:50%;border:0;background:var(--cargo);color:#fff;font-size:56px;align-self:center;box-shadow:0 6px 20px rgba(204,102,20,.4)}
+.micbig.live{animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(204,102,20,.55)}70%{box-shadow:0 0 0 22px rgba(204,102,20,0)}100%{box-shadow:0 0 0 0 rgba(204,102,20,0)}}
+.heard{font-size:22px;font-weight:700;text-align:center;min-height:34px}
+
+.lock{position:fixed;inset:0;z-index:80;background:var(--deep);color:#fff;display:flex;align-items:center;justify-content:center;
+  padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow-y:auto}
+.lock-in{width:100%;max-width:420px;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center}
+.lock .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.lock .roles button{border:3px solid transparent;background:rgba(255,255,255,.1);border-radius:18px;padding:14px 4px;color:#fff;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px}
+.lock .roles button.on{border-color:var(--cargo)}
+.lock .roles .ic{font-size:44px}
+.lock .dots{display:flex;gap:14px}
+.lock .dots i{width:20px;height:20px;border-radius:50%;border:3px solid #fff}
+.lock .dots i.f{background:#fff}
+.lock .keys{width:100%}
+.lock .keys button{background:rgba(255,255,255,.12);color:#fff}
+
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:90;background:var(--ink);color:var(--bg);padding:14px 22px;border-radius:16px;font-weight:700;font-size:17px;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center}
+.spin{display:inline-block;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="top"><div class="top-in">
+  <div class="brand"><span class="logo" aria-hidden="true">🚢</span><div style="min-width:0"><b><span id="appName">Cargo Munim</span><em>PRO</em></b><small id="coName"></small></div></div>
+  <button class="tbtn mic" id="micBtn" data-act="voice-entry" aria-label="Speak" hidden>🎤</button>
+  <button class="tbtn hide-sm" data-act="search" aria-label="Search">🔍</button>
+  <button class="tbtn" id="voiceBtn" data-act="voice" aria-label="Voice">🔊</button>
+  <button class="tbtn" data-act="lang" aria-label="Language"><span id="langLbl">EN</span></button>
+  <button class="tbtn" id="roleBtn" data-act="lock" aria-label="Role">👑</button>
+</div></header>
+<div class="shell"><aside class="side" id="side"></aside><main id="main"></main></div>
+<nav class="nav"><div class="nav-in" id="nav"></div></nav>
+<div id="sheetRoot"></div>
+<div id="lockRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/* ================= Cargo Munim PRO =================
+   Import / export ERP for people who may not read: pictures, colours, voice.
+   Storage: in a claude.ai artifact with the `db` capability the whole team shares one live database;
+   anywhere else (file opened on a desktop) data stays in this browser's localStorage. */
+'use strict';
+const DAY = 864e5;
+const pad2 = n => String(n).padStart(2, '0');
+const isoOf = dt => `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
+const today = () => isoOf(new Date());
+const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return isoOf(d); };
+const daysFrom = iso => Math.round((new Date(iso + 'T12:00:00') - new Date(today() + 'T12:00:00')) / DAY);
+const nowISO = () => new Date().toISOString();
+const uid = () => Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 8);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const flag = cc => cc && /^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '🏳️';
+const groupBy = (arr, f) => { const m = {}; for (const x of arr){ const k = f(x); (m[k] = m[k] || []).push(x); } return m; };
+const sum = (arr, f) => arr.reduce((s, x) => s + (f ? f(x) : x), 0);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------- per-viewer prefs (language, voice, role) ---------- */
+const PKEY = 'cm_pro_prefs', DKEY = 'cm_pro_data_v2';
+let P = {lang: 'hi', voice: true, role: null};
+try{ Object.assign(P, JSON.parse(localStorage.getItem(PKEY) || '{}')); }catch(e){}
+const savePrefs = () => { try{ localStorage.setItem(PKEY, JSON.stringify(P)); }catch(e){} };
+const T = (h, e) => P.lang === 'hi' ? h : e;
+const hi = () => P.lang === 'hi';
+
+/* ---------- reference data ---------- */
+const COUNTRIES = [
+ ['IN','भारत','India','Nhava Sheva'],['AE','दुबई (UAE)','UAE','Jebel Ali'],['SA','सऊदी अरब','Saudi Arabia','Jeddah'],['OM','ओमान','Oman','Sohar'],['QA','क़तर','Qatar','Hamad'],['KW','कुवैत','Kuwait','Shuwaikh'],
+ ['US','अमेरिका','USA','New York'],['GB','इंग्लैंड','UK','Felixstowe'],['DE','जर्मनी','Germany','Hamburg'],['NL','नीदरलैंड','Netherlands','Rotterdam'],['FR','फ़्रांस','France','Le Havre'],['IT','इटली','Italy','Genoa'],
+ ['CN','चीन','China','Shanghai'],['BD','बांग्लादेश','Bangladesh','Chittagong'],['NP','नेपाल','Nepal','Birgunj ICD'],['LK','श्रीलंका','Sri Lanka','Colombo'],['VN','वियतनाम','Vietnam','Ho Chi Minh'],['SG','सिंगापुर','Singapore','Singapore'],
+ ['MY','मलेशिया','Malaysia','Port Klang'],['ID','इंडोनेशिया','Indonesia','Jakarta'],['TH','थाईलैंड','Thailand','Laem Chabang'],['JP','जापान','Japan','Yokohama'],['KR','कोरिया','Korea','Busan'],['AU','ऑस्ट्रेलिया','Australia','Sydney'],
+ ['CA','कनाडा','Canada','Vancouver'],['RU','रूस','Russia','St Petersburg'],['TR','तुर्की','Turkey','Mersin'],['EG','मिस्र','Egypt','Port Said'],['ZA','दक्षिण अफ़्रीका','South Africa','Durban'],['KE','केन्या','Kenya','Mombasa'],['IR','ईरान','Iran','Bandar Abbas']
+];
+const CUR = {INR: '₹', USD: '$', AED: 'AED ', EUR: '€', GBP: '£', SAR: 'SAR '};
+const CUR_HI = {INR: 'रुपये', USD: 'डॉलर', AED: 'दिरहम', EUR: 'यूरो', GBP: 'पाउंड', SAR: 'रियाल'};
+const ITEM_ICONS = ['📦','🍚','🌾','🌶️','🫚','☕','🍵','🥜','🌰','🧂','🍯','🥭','🍌','🥥','🧅','🧄','🍅','🐟','🧵','👕','👟','👜','🪵','🧱','⚙️','🔩','🛢️','🧴','💊','💎','🪨','🔌','🚗','🧸','🪑'];
+const PARTY_ICONS = ['🏢','🏭','🏪','🚚','👨‍💼','👩‍💼','🧔','👳','🧕','👴','🧑‍🌾','⚓','🌰','🏦'];
+const STAGE_IC = ['📦','⚓','🚢','🛃','✅'];
+const STAGES = () => [T('पैकिंग','Packing'), T('बंदरगाह','Port'), T('समुंदर में','At sea'), T('कस्टम','Customs'), T('पहुँच गया','Delivered')];
+const TYPE_IC = {sale:'📤', buy:'📥', payIn:'💰', payOut:'💸', adj:'🔢', exp:'🧾'};
+const TYPE_NM = k => ({sale:T('माल दिया','Gave goods'), buy:T('माल लिया','Got goods'), payIn:T('पैसा मिला','Money received'), payOut:T('पैसा दिया','Money paid'), adj:T('गिनती बदली','Stock count'), exp:T('खर्चा','Expense')}[k]);
+const TYPE_SUB = k => ({sale:T('बेचा / भेजा','Sold / sent'), buy:T('खरीदा / मँगाया','Bought / ordered'), payIn:T('किसी ने पैसा दिया','Someone paid us'), payOut:T('हमने पैसा दिया','We paid someone'), exp:T('भाड़ा, कस्टम…','Freight, duty…')}[k]);
+const EXP = {freight:['🚢','भाड़ा (Freight)','Freight'], duty:['🛃','कस्टम ड्यूटी','Customs duty'], cha:['🧾','एजेंट (CHA)','Agent (CHA)'], insurance:['🛡️','बीमा','Insurance'], transport:['🚚','ट्रक / ढुलाई','Transport'], packing:['📦','पैकिंग','Packing'], bank:['🏦','बैंक चार्ज','Bank charges'], other:['➕','दूसरा','Other']};
+const expNm = k => EXP[k] ? (hi() ? EXP[k][1] : EXP[k][2]) : k;
+const DOCS = [['inv','🧾','Invoice'],['pl','📋','Packing List'],['sb','📑','Shipping Bill / BOE'],['bl','🚢','Bill of Lading'],['coo','🌍','Certificate of Origin'],['phyto','🌿','Phyto / Health'],['ins','🛡️','Insurance'],['lc','🏦','LC / Bank docs']];
+const ROLES = {owner:['👑','मालिक','Owner'], munim:['🧮','मुनीम','Accountant'], worker:['👷','कारीगर','Worker']};
+const roleNm = r => ROLES[r] ? (hi() ? ROLES[r][1] : ROLES[r][2]) : r;
+const MODES = {bank:['🏦','बैंक','Bank'], cash:['💵','नकद','Cash'], lc:['📜','LC','LC'], upi:['📱','UPI','UPI']};
+const cname = cc => { const c = COUNTRIES.find(x => x[0] === cc); return c ? (hi() ? c[1] : c[2]) : (cc || ''); };
+const cport = cc => (COUNTRIES.find(x => x[0] === cc) || [])[3] || '';
+
+/* ---------- data ---------- */
+const COLLS = ['items','parties','txns','ships','expenses','log'];
+const defaultSettings = () => ({company:'', address:'', iec:'', gstin:'', bank:'', fx:{USD:83.4, AED:22.7, EUR:90.1, GBP:105.2, SAR:22.2}, rodtep:2, drawback:1.5, pins:{owner:'', munim:'', worker:''}, invPrefix:'INV', demo:false});
+const blank = () => ({settings: defaultSettings(), items:[], parties:[], txns:[], ships:[], expenses:[], log:[]});
+let S = blank();
+let mode = 'local', db = null, userCap = null, me = null, dl = null, sampleCap = null, dictCap = null, ttsCap = null;
+let loading = false, loadFail = false;
+
+function loadLocal(){ try{ const j = localStorage.getItem(DKEY); if (!j) return null; const d = JSON.parse(j); for (const c of COLLS) d[c] = d[c] || []; d.settings = Object.assign(defaultSettings(), d.settings || {}); return d; }catch(e){ return null; } }
+function saveLocal(){ if (mode !== 'local') return; try{ localStorage.setItem(DKEY, JSON.stringify(S)); }catch(e){ toast('⚠️ ' + T('जगह भर गई, बैकअप लो','Storage full, take a backup')); } }
+const plain = o => JSON.parse(JSON.stringify(o));
+function put(c, o){
+  o.at = o.at || nowISO(); if (!o.by) o.by = me?.id || P.role || 'owner'; if (!o.role) o.role = P.role || 'owner';
+  const arr = S[c], k = arr.findIndex(x => x.id === o.id); if (k >= 0) arr[k] = o; else arr.push(o);
+  if (mode === 'cloud') db.collection(c).doc(o.id).set(plain(o)).catch(e => toast('⚠️ ' + T('सेव नहीं हुआ','Not saved') + ' (' + (e?.code || 'error') + ')'));
+  else saveLocal();
+}
+function remove(c, id){
+  S[c] = S[c].filter(x => x.id !== id);
+  if (mode === 'cloud') db.collection(c).doc(id).delete().catch(e => toast('⚠️ ' + (e?.code || 'error'))); else saveLocal();
+}
+function putSettings(){
+  if (mode === 'cloud') db.doc('config/settings').set(plain(S.settings)).catch(e => toast('⚠️ ' + (e?.code || 'error'))); else saveLocal();
+}
+function logIt(ic, text){ put('log', {id: uid(), at: nowISO(), ic, text}); }
+
+/* ---------- derived numbers (recomputed every render) ---------- */
+let C = {};
+const item = id => S.items.find(x => x.id === id);
+const party = id => S.parties.find(x => x.id === id);
+const ship = id => S.ships.find(x => x.id === id);
+const fxOf = cur => cur === 'INR' || !cur ? 1 : (+S.settings.fx[cur] || 1);
+function compute(){
+  const stock = {}, sold60 = {}, incoming = {}, cut = addDays(today(), -60);
+  for (const i of S.items){ stock[i.id] = +i.open || 0; sold60[i.id] = 0; incoming[i.id] = 0; }
+  const shipBy = Object.fromEntries(S.ships.map(s => [s.id, s]));
+  for (const x of S.txns){
+    if (x.type === 'adj'){ if (x.item in stock) stock[x.item] += +x.qty || 0; continue; }
+    if (x.type !== 'sale' && x.type !== 'buy') continue;
+    const sh = x.ship ? shipBy[x.ship] : null;
+    for (const l of x.lines || []){ if (!(l.item in stock)) continue;
+      if (x.type === 'sale'){ stock[l.item] -= l.qty; if (x.d >= cut) sold60[l.item] += l.qty; }
+      else if (!sh || sh.stage >= 4) stock[l.item] += l.qty; else incoming[l.item] += l.qty;
+    }
+  }
+  const bal = {}, inv = {}, pOver = {};
+  for (const p of S.parties){ bal[p.id] = 0; pOver[p.id] = 0; }
+  const byP = groupBy(S.txns.filter(x => x.party), x => x.party);
+  const alloc = (bills, paid) => { let rem = paid; for (const b of bills.sort((a, c) => a.d.localeCompare(c.d))){ const p = Math.min(b.amount, Math.max(0, rem)); rem -= p; const open = b.amount - p;
+      inv[b.id] = {paid: p, open, status: open <= .5 ? 'paid' : p > .5 ? 'part' : 'unpaid', over: open > .5 && b.due && b.due < today() ? -daysFrom(b.due) : 0}; } };
+  for (const [pid, xs] of Object.entries(byP)){
+    let b = 0; for (const x of xs){ if (x.type === 'sale' || x.type === 'payOut') b += x.amount; else if (x.type === 'buy' || x.type === 'payIn') b -= x.amount; }
+    bal[pid] = Math.abs(b) < 1 ? 0 : b;
+    alloc(xs.filter(x => x.type === 'sale'), sum(xs.filter(x => x.type === 'payIn'), x => x.amount));
+    alloc(xs.filter(x => x.type === 'buy'), sum(xs.filter(x => x.type === 'payOut'), x => x.amount));
+    pOver[pid] = sum(xs.filter(x => x.type === 'sale' && inv[x.id]?.over > 0), x => inv[x.id].open);
+  }
+  const days = {}; for (const i of S.items){ const avg = sold60[i.id] / 60; days[i.id] = avg > 0 ? Math.max(0, Math.floor(stock[i.id] / avg)) : Infinity; }
+  C = {stock, sold60, incoming, bal, inv, pOver, days};
+}
+const stockOf = id => C.stock[id] ?? 0;
+const lineCost = l => (+l.cost || 0) * l.qty;
+const expOfShip = sid => sum(S.expenses.filter(e => e.ship === sid), e => e.amount);
+
+/* ---------- formatting ---------- */
+const smoney = n => (n < -0.5 ? '− ' : '') + money(n);
+const money = n => '₹ ' + Math.round(Math.abs(n)).toLocaleString('en-IN');
+const fmoney = (n, cur) => (CUR[cur] || '₹ ') + (cur === 'INR' ? Math.round(Math.abs(n)).toLocaleString('en-IN') : Math.abs(n).toLocaleString('en-US', {maximumFractionDigits: 2}));
+const qtyFmt = n => (+n).toLocaleString('en-IN', {maximumFractionDigits: 2});
+const fmtDate = iso => iso ? new Date(iso.length > 10 ? iso : iso + 'T12:00:00').toLocaleDateString(hi() ? 'hi-IN' : 'en-IN', {day: 'numeric', month: 'short'}) : '';
+const fmtDT = iso => new Date(iso).toLocaleString(hi() ? 'hi-IN' : 'en-IN', {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'});
+const sayMoney = (n, cur) => `${Math.round(Math.abs(n))} ${hi() ? (CUR_HI[cur || 'INR']) : (cur && cur !== 'INR' ? cur : 'rupees')}`;
+const pic = (o, cls = '') => `<span class="pic ${cls}">${o && o.photo ? `<img src="${esc(o.photo)}" alt="">` : esc(o ? o.icon : '❓')}</span>`;
+const seeMoney = () => (P.role || 'owner') !== 'worker';
+const isOwner = () => (P.role || 'owner') === 'owner';
+const daysTxt = d => d === Infinity ? T('बिक्री नहीं','no sales') : `~${d} ${T('दिन का माल','days of stock')}`;
+
+/* ---------- voice out ---------- */
+function speak(text){
+  if (!P.voice || !text) return;
+  text = String(text).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}\u{1F1E6}-\u{1F1FF}]/gu, ' ').replace(/₹/g, '').trim();
+  if (!text) return;
+  const want = hi() ? 'hi' : 'en';
+  const vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  const v = vs.find(v => (v.lang || '').toLowerCase().startsWith(want === 'hi' ? 'hi' : 'en-in')) || (want === 'en' ? vs.find(v => (v.lang || '').startsWith('en')) : null);
+  if (!v && ttsCap){ ttsCap.speak(text.slice(0, 1900), {language: want}).catch(() => {}); return; }
+  if (!window.speechSynthesis) return;
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = want === 'hi' ? 'hi-IN' : 'en-IN'; u.rate = .95; if (v) u.voice = v; speechSynthesis.speak(u); }catch(e){}
+}
+
+/* ================= VIEWS ================= */
+let view = 'home', shipDir = 'out', partyFilter = 'all', invFilter = 'open', invKind = 'sale', sheet = null, W = null, armed = null, lockState = null;
+const V = {};
+
+V.home = () => {
+  if (loading) return `<div class="empty-big"><span class="ic spin">⚓</span><b>${T('डेटा आ रहा है…','Loading data…')}</b></div>`;
+  const out = S.ships.filter(s => s.dir === 'out' && s.stage < 4), inn = S.ships.filter(s => s.dir === 'in' && s.stage < 4);
+  if (!S.items.length && !S.parties.length) return emptyStart();
+  let lena = 0, dena = 0; for (const p of S.parties){ const b = C.bal[p.id]; if (b > 0) lena += b; else dena -= b; }
+  const overdue = sum(Object.values(C.pOver));
+  const stockVal = sum(S.items, i => Math.max(0, stockOf(i.id)) * (+i.buy || 0));
+  const m0 = today().slice(0, 7);
+  const salesM = sum(S.txns.filter(x => x.type === 'sale' && x.d.startsWith(m0)), x => x.amount);
+  const A = alerts();
+  const said = `${T('लेना है','To receive')} ${sayMoney(lena)}. ${T('देना है','To pay')} ${sayMoney(dena)}. ${out.length} ${T('शिपमेंट जा रहे हैं','shipments going')}, ${inn.length} ${T('आ रहे हैं','coming')}. ${A.length} ${T('बातों पर ध्यान दो','things need attention')}.`;
+  return `
+  ${S.settings.demo ? `<div class="note" data-say="${esc(T('यह नमूना डेटा है','This is sample data'))}"><span style="font-size:24px">🧪</span><span>${T('यह नमूना (demo) डेटा है। अपना काम शुरू करने के लिए ⚙️ सेटिंग में "सब मिटाओ" दबाएँ।','This is sample (demo) data. To start your own work, press "Erase all" in ⚙️ Settings.')}</span></div>` : ''}
+  <div class="row"><h2>${T('आज का हाल','Today at a glance')}</h2><span class="sp"></span>${sampleCap ? `<button class="btn sm" data-act="ai" data-say="${T('मुनीम जी से पूछो','Ask Munim')}">🤖 ${T('मुनीम जी से पूछो','Ask Munim')}</button>` : ''}<button class="say" data-say="${esc(said)}" aria-label="listen">🔊</button></div>
+  <div class="tiles">
+    ${seeMoney() ? `
+    <button class="tile good" data-act="nav" data-v="money" data-say="${esc(T('लोगों से लेना है','Money to receive') + ' ' + sayMoney(lena))}"><span class="arrow">⬇️</span><span class="ic">💰</span><span class="lbl">${T('लेना है','To receive')}</span><span class="val num">${money(lena)}</span><span class="sub">${overdue > 0 ? `⏰ ${money(overdue)} ${T('लेट','overdue')}` : T('लोगों से','from people')}</span></button>
+    <button class="tile bad" data-act="nav" data-v="money" data-say="${esc(T('लोगों को देना है','Money to pay') + ' ' + sayMoney(dena))}"><span class="arrow">⬆️</span><span class="ic">💸</span><span class="lbl">${T('देना है','To pay')}</span><span class="val num">${money(dena)}</span><span class="sub">${T('लोगों को','to people')}</span></button>
+    <button class="tile info" data-act="nav" data-v="reports" data-say="${esc(T('इस महीने की बिक्री','Sales this month') + ' ' + sayMoney(salesM))}"><span class="ic">📊</span><span class="lbl">${T('इस महीने बिक्री','Sales this month')}</span><span class="val num">${money(salesM)}</span><span class="sub">${T('गोदाम','Godown')}: ${money(stockVal)}</span></button>` : `
+    <button class="tile" data-act="nav" data-v="stock" data-say="${T('माल','Stock')}"><span class="ic">📦</span><span class="lbl">${T('माल','Stock')}</span><span class="val num">${S.items.length}</span><span class="sub">${T('चीज़ें','items')}</span></button>`}
+    <button class="tile cargo" data-act="nav" data-v="ships" data-say="${esc(out.length + ' ' + T('जा रहे','going') + ', ' + inn.length + ' ' + T('आ रहे','coming'))}"><span class="ic">🚢</span><span class="lbl">${T('शिपमेंट','Shipments')}</span><span class="val num">📤 ${out.length} · 📥 ${inn.length}</span><span class="sub">${T('रास्ते में','on the way')}</span></button>
+  </div>
+  ${P.role !== 'worker' ? `<h3>${T('नई एंट्री','New entry')}</h3>
+  <div class="actions">
+    ${['sale','buy','payIn','payOut','exp'].map(k => `<button class="act ${{sale:'acc',buy:'cargo',payIn:'good',payOut:'bad',exp:'info'}[k]}" data-act="wiz" data-type="${k}" data-say="${esc(TYPE_NM(k))}"><span class="ic">${TYPE_IC[k]}</span>${TYPE_NM(k)}<small>${TYPE_SUB(k)}</small></button>`).join('')}
+  </div>` : ''}
+  <h3>${T('ध्यान दो','Needs attention')} ${A.length ? `<span class="pill bad">${A.length}</span>` : ''}</h3>
+  <div class="alerts">${A.slice(0, 8).map(a => `<button class="alert ${a.cls}" data-act="${a.act}" data-id="${a.id}" data-say="${esc(a.t + '. ' + a.dsay)}"><span class="ic">${a.ic}</span><span><b>${a.t}</b><span class="muted">${a.d}</span></span></button>`).join('') || `<div class="alert good"><span class="ic">✅</span><b>${T('सब ठीक है 👍','All good 👍')}</b></div>`}
+  ${A.length > 8 ? `<div class="muted" style="text-align:center">+${A.length - 8} ${T('और','more')}</div>` : ''}</div>
+  ${countryStrip(groupBy(out, s => s.country), T('अभी इन देशों में माल जा रहा है','Goods are heading to'), 'out')}
+  ${countryStrip(groupBy(inn, s => s.country), T('इन देशों से माल आ रहा है','Goods are coming from'), 'in')}
+  <h3>${T('हाल की एंट्री','Recent entries')}</h3>
+  ${txnList(S.txns.slice().sort((a, b) => (b.at || b.d).localeCompare(a.at || a.d)).slice(0, 8), true)}`;
+};
+function emptyStart(){
+  return `<div class="empty-big"><span class="ic">🚢</span><h2>${T('कार्गो मुनीम में स्वागत है','Welcome to Cargo Munim')}</h2>
+  <p class="muted" style="margin:0;max-width:44ch">${T('पहले अपना माल और अपने ग्राहक / सप्लायर जोड़ो। या नमूना डेटा डालकर देखो कि ऐप कैसे काम करता है।','First add your goods and your buyers / suppliers. Or load sample data to see how the app works.')}</p>
+  <div class="row" style="justify-content:center"><button class="btn pri" data-act="item-form">📦 ${T('माल जोड़ो','Add goods')}</button><button class="btn pri" data-act="party-form">👥 ${T('आदमी / कंपनी जोड़ो','Add person / company')}</button></div>
+  ${isOwner() ? `<button class="btn" data-act="demo-load">🧪 ${T('नमूना डेटा डालो','Load sample data')}</button>` : ''}
+  ${mode === 'cloud' ? `<div class="note info">👥 ${T('ये डेटा पूरी टीम के साथ शेयर होता है।','This data is shared with your whole team.')}</div>` : ''}</div>`;
+}
+function alerts(){
+  const a = [];
+  for (const s of S.ships) if (s.stage < 4 && daysFrom(s.eta) < 0){ const p = party(s.party); a.push({cls: 'bad', ic: '⏰', t: T('शिपमेंट लेट है','Shipment is late'), d: `${flag(s.country)} ${esc(p?.name)} · ${-daysFrom(s.eta)} ${T('दिन लेट','days late')}`, dsay: `${p?.name}, ${-daysFrom(s.eta)} ${T('दिन लेट','days late')}`, act: 'open-ship', id: s.id}); }
+  if (seeMoney()) for (const x of S.txns) if (x.type === 'sale' && C.inv[x.id]?.over > 0){ const p = party(x.party); a.push({cls: 'bad', ic: '💰', t: T('पैसा लेट है','Payment overdue'), d: `${esc(p?.name)} · ${money(C.inv[x.id].open)} · ${C.inv[x.id].over} ${T('दिन से','days')} · ${esc(x.inv || '')}`, dsay: `${p?.name} ${T('से','from')} ${sayMoney(C.inv[x.id].open)}, ${C.inv[x.id].over} ${T('दिन से लेट','days late')}`, act: 'open-inv', id: x.id}); }
+  if (seeMoney()) for (const x of S.txns) if (x.type === 'buy' && C.inv[x.id]?.open > .5 && x.due && daysFrom(x.due) <= 7){ const p = party(x.party), d = daysFrom(x.due); a.push({cls: d < 0 ? 'bad' : '', ic: '💸', t: T('पैसा देना है','Payment due'), d: `${esc(p?.name)} · ${money(C.inv[x.id].open)} · ${d < 0 ? -d + ' ' + T('दिन लेट','days late') : d + ' ' + T('दिन में','days left')}`, dsay: `${p?.name} ${T('को','to')} ${sayMoney(C.inv[x.id].open)}`, act: 'open-party', id: x.party}); }
+  for (const i of S.items){ const st = stockOf(i.id), d = C.days[i.id]; if (st < (+i.min || 0) || d < 15) a.push({cls: st < (+i.min || 0) ? 'bad' : '', ic: '⚠️', t: `${T('माल कम है','Stock is low')}: ${esc(i.name)}`, d: `${qtyFmt(st)} ${esc(i.unit)} · ${daysTxt(d)}${C.incoming[i.id] ? ` · 📥 ${qtyFmt(C.incoming[i.id])} ${T('आ रहा','coming')}` : ''}`, dsay: `${i.name}, ${qtyFmt(st)} ${i.unit} ${T('बचा','left')}`, act: 'open-item', id: i.id}); }
+  for (const p of S.parties) if (seeMoney() && +p.limit > 0 && C.bal[p.id] > +p.limit) a.push({cls: 'bad', ic: '🚧', t: T('उधार की सीमा पार','Credit limit crossed'), d: `${esc(p.name)} · ${money(C.bal[p.id])} / ${money(p.limit)}`, dsay: p.name, act: 'open-party', id: p.id});
+  for (const s of S.ships) if (s.stage >= 2 && s.stage < 4 && !(s.docs || {}).bl){ a.push({cls: '', ic: '📑', t: T('कागज़ बाकी: Bill of Lading','Missing paper: Bill of Lading'), d: `${flag(s.country)} ${esc(s.ref)}`, dsay: s.ref, act: 'open-ship', id: s.id}); }
+  for (const s of S.ships) if (s.dir === 'in' && s.stage < 4 && daysFrom(s.eta) >= 0 && daysFrom(s.eta) <= 7){ const p = party(s.party); a.push({cls: 'info', ic: '📥', t: T('माल जल्दी आने वाला है','Goods arriving soon'), d: `${flag(s.country)} ${esc(p?.name)} · ${daysFrom(s.eta)} ${T('दिन बाकी','days left')}`, dsay: `${p?.name}, ${daysFrom(s.eta)} ${T('दिन बाकी','days left')}`, act: 'open-ship', id: s.id}); }
+  return a;
+}
+function countryStrip(g, title, dir){
+  const ks = Object.keys(g); if (!ks.length) return '';
+  return `<h3>${title}</h3><div class="countries">${ks.map(k => `<button class="cty" data-act="ship-tab" data-d="${dir}" data-say="${esc(cname(k) + ', ' + g[k].length)}"><span class="flag">${flag(k)}</span><b>${esc(cname(k))}</b><small>${g[k].length} ${T('शिपमेंट','shipments')}</small></button>`).join('')}</div>`;
+}
+function linesTxt(x){ return (x.lines || []).map(l => { const i = item(l.item); return i ? `${i.icon} ${i.name} × ${qtyFmt(l.qty)} ${i.unit}` : ''; }).filter(Boolean).join(', '); }
+function txnList(list, showParty){
+  if (!list.length) return `<div class="list"><div class="empty">${T('अभी कुछ नहीं है','Nothing here yet')}</div></div>`;
+  return `<div class="list">${list.map(x => {
+    const p = party(x.party), good = x.type === 'sale' || x.type === 'payIn';
+    const what = x.type === 'adj' ? `${item(x.item)?.icon || ''} ${esc(item(x.item)?.name || '')} ${x.qty > 0 ? '+' : ''}${qtyFmt(x.qty)}` : esc(linesTxt(x));
+    const st = C.inv[x.id];
+    const sayTxt = `${TYPE_NM(x.type)}. ${p ? p.name : ''}. ${what.replace(/[^\p{L}\p{N}\s,.×]/gu, '')}. ${seeMoney() && x.amount ? sayMoney(x.amount) : ''}`;
+    return `<div class="li" data-say="${esc(sayTxt)}"><span class="ic">${TYPE_IC[x.type]}</span>
+      ${showParty && p ? pic(p, 'sm') : ''}
+      <div class="body"><div class="t1">${TYPE_NM(x.type)}${showParty && p ? ' · ' + esc(p.name) : ''}</div><div class="t2">${fmtDate(x.d)}${x.inv ? ' · ' + esc(x.inv) : ''}${what ? ' · ' + what : ''}${x.mode && MODES[x.mode] ? ' · ' + MODES[x.mode][0] : ''}</div></div>
+      <div class="rt">${seeMoney() && x.amount ? `<div class="amt num ${good ? 'good' : 'bad'}" style="font-size:18px">${money(x.amount)}</div>${x.cur && x.cur !== 'INR' ? `<div class="t2 num">${fmoney(x.famount || x.amount / (x.fx || 1), x.cur)}</div>` : ''}` : ''}
+      ${st && seeMoney() ? statusPill(x) : ''}</div>
+      ${(x.type === 'sale' || x.type === 'buy') && seeMoney() ? `<button class="btn sm ghost" data-act="open-inv" data-id="${x.id}" aria-label="invoice">🧾</button>` : ''}
+      ${!showParty && isOwner() ? `<button class="btn sm ${armed === 'del-' + x.id ? 'armed' : 'ghost'}" data-act="del-txn" data-id="${x.id}">${armed === 'del-' + x.id ? T('पक्का?','Sure?') : '🗑️'}</button>` : ''}
+    </div>`; }).join('')}</div>`;
+}
+function statusPill(x){
+  const s = C.inv[x.id]; if (!s) return '';
+  if (s.status === 'paid') return `<span class="pill good">✅ ${T('चुका','Paid')}</span>`;
+  if (s.over > 0) return `<span class="pill bad">⏰ ${s.over}${T('दिन','d')}</span>`;
+  return s.status === 'part' ? `<span class="pill warn">🌓 ${T('आधा','Part')}</span>` : `<span class="pill">⏳ ${T('बाकी','Due')}</span>`;
+}
+
+/* ----- stock ----- */
+V.stock = () => `
+  <div class="row"><h2>📦 ${T('माल (स्टॉक)','Stock')}</h2><span class="sp"></span>${P.role !== 'worker' ? `<button class="btn pri" data-act="item-form">➕ ${T('नया माल','New item')}</button>` : ''}</div>
+  <div class="grid">${S.items.map(i => {
+    const st = stockOf(i.id), low = st < (+i.min || 0), d = C.days[i.id], pct = Math.max(3, Math.min(100, st / Math.max(1, (+i.min || 1) * 3) * 100));
+    return `<button class="card" data-act="open-item" data-id="${i.id}" data-say="${esc(`${i.name}. ${qtyFmt(st)} ${i.unit} ${T('गोदाम में','in godown')}. ${d !== Infinity ? daysTxt(d) : ''}`)}">
+      ${pic(i)}<span class="body"><span class="nm">${esc(i.name)}</span>
+      <span class="num" style="font-weight:700;font-size:20px;color:${low ? 'var(--bad)' : 'var(--ink)'}">${qtyFmt(st)} <small class="muted">${esc(i.unit)}</small> ${low ? '⚠️' : ''}</span>
+      <span class="bar ${low ? 'low' : d < 30 ? 'mid' : ''}"><i style="width:${pct}%"></i></span>
+      <span class="row" style="gap:6px">${seeMoney() ? `<span class="pill good num">🏷️ ${money(i.sell)}</span>` : ''}<span class="pill ${d < 15 ? 'bad' : d < 30 ? 'warn' : ''}">⏳ ${daysTxt(d)}</span>${C.incoming[i.id] ? `<span class="pill info">📥 ${qtyFmt(C.incoming[i.id])}</span>` : ''}${trendPill(i)}</span></span></button>`;
+  }).join('') || `<div class="empty">${T('अभी कुछ नहीं है','Nothing here yet')}</div>`}</div>`;
+function trendPill(i){ const h = i.hist || []; if (h.length < 2 || !seeMoney()) return ''; const a = h[h.length - 2].sell, b = h[h.length - 1].sell; return a === b ? '' : b > a ? `<span class="pill good">📈</span>` : `<span class="pill bad">📉</span>`; }
+
+/* ----- people ----- */
+V.parties = () => {
+  let ps = S.parties.map(p => ({p, b: C.bal[p.id] || 0}));
+  if (partyFilter === 'lena') ps = ps.filter(x => x.b > 0); if (partyFilter === 'dena') ps = ps.filter(x => x.b < 0);
+  if (partyFilter === 'cust') ps = ps.filter(x => x.p.kind !== 'supplier'); if (partyFilter === 'sup') ps = ps.filter(x => x.p.kind !== 'customer');
+  if (partyFilter === 'late') ps = ps.filter(x => C.pOver[x.p.id] > 0);
+  ps.sort((a, b) => Math.abs(b.b) - Math.abs(a.b));
+  const f = (k, l) => `<button class="${partyFilter === k ? 'on' : ''}" data-act="pfilter" data-f="${k}" data-say="${esc(l)}">${l}</button>`;
+  return `<div class="row"><h2>👥 ${T('लोग','People')}</h2><span class="sp"></span>${P.role !== 'worker' ? `<button class="btn pri" data-act="party-form">➕ ${T('नया आदमी / कंपनी','New person / company')}</button>` : ''}</div>
+  <div class="seg">${f('all', T('सब','All'))}${seeMoney() ? f('lena', '💰 ' + T('लेना है','To receive')) + f('dena', '💸 ' + T('देना है','To pay')) + f('late', '⏰ ' + T('लेट','Overdue')) : ''}${f('cust', '🛍️ ' + T('ग्राहक','Buyers'))}${f('sup', '🏭 ' + T('सप्लायर','Suppliers'))}</div>
+  <div class="grid">${ps.map(({p, b}) => partyCard(p, b)).join('') || `<div class="empty">${T('अभी कुछ नहीं है','Nothing here yet')}</div>`}</div>`;
+};
+function partyCard(p, b){
+  const s = !seeMoney() ? p.name : b > 0 ? `${p.name}. ${T('ये हमें देंगे','They will pay us')} ${sayMoney(b)}` : b < 0 ? `${p.name}. ${T('हमें इन्हें देना है','We must pay them')} ${sayMoney(b)}` : `${p.name}. ${T('हिसाब बराबर','All settled')}`;
+  const ov = C.pOver[p.id];
+  return `<button class="card" data-act="open-party" data-id="${p.id}" data-say="${esc(s)}">${pic(p)}
+    <span class="body"><span class="nm">${esc(p.name)}</span><span class="muted" style="font-size:15px">${flag(p.country)} ${esc(cname(p.country))}${p.cur && p.cur !== 'INR' ? ' · ' + p.cur : ''}</span>
+    ${!seeMoney() ? '' : b > 0 ? `<span class="amt good num">⬇️ ${money(b)}</span><span class="row" style="gap:6px"><span class="pill good">${T('ये हमें देंगे','They pay us')}</span>${ov > 0 ? `<span class="pill bad">⏰ ${money(ov)}</span>` : ''}</span>` : b < 0 ? `<span class="amt bad num">⬆️ ${money(b)}</span><span class="pill bad">${T('हमें देना है','We pay them')}</span>` : `<span class="pill">🤝 ${T('हिसाब बराबर','All settled')}</span>`}
+    </span></button>`;
+}
+
+/* ----- shipments ----- */
+V.ships = () => {
+  const list = S.ships.filter(s => s.dir === shipDir).sort((a, b) => (a.stage === 4) - (b.stage === 4) || a.eta.localeCompare(b.eta));
+  return `<h2>🚢 ${T('शिपमेंट','Shipments')}</h2>
+  <div class="seg"><button class="${shipDir === 'out' ? 'on' : ''}" data-act="ship-tab" data-d="out" data-say="${T('बाहर जा रहा माल','Export')}">📤 ${T('बाहर जा रहा (Export)','Going out (Export)')}</button><button class="${shipDir === 'in' ? 'on' : ''}" data-act="ship-tab" data-d="in" data-say="${T('अंदर आ रहा माल','Import')}">📥 ${T('अंदर आ रहा (Import)','Coming in (Import)')}</button></div>
+  <div class="grid wide">${list.map(s => shipCard(s, true)).join('') || `<div class="empty">${T('अभी कुछ नहीं है','Nothing here yet')}</div>`}</div>`;
+};
+function shipCard(s, clickable){
+  const p = party(s.party), dl0 = daysFrom(s.eta), st = STAGES();
+  const status = s.stage === 4 ? `<span class="pill good">✅ ${st[4]}</span>` : dl0 < 0 ? `<span class="pill bad">⏰ ${-dl0} ${T('दिन लेट','d late')}</span>` : `<span class="pill warn">⏳ ${dl0} ${T('दिन बाकी','days left')}</span>`;
+  const lines = (s.lines || []).map(l => { const i = item(l.item); return i ? `${i.icon} ${i.name} × ${qtyFmt(l.qty)} ${i.unit}` : ''; }).join(', ');
+  const dc = DOCS.filter(d => (s.docs || {})[d[0]]).length;
+  const sayTxt = `${s.dir === 'out' ? T('जा रहा माल','Going out') : T('आ रहा माल','Coming in')}. ${cname(s.country)}. ${p?.name || ''}. ${st[s.stage]}. ${s.stage < 4 ? (dl0 < 0 ? -dl0 + ' ' + T('दिन लेट','days late') : dl0 + ' ' + T('दिन बाकी','days left')) : ''}`;
+  return `<div class="ship" data-say="${esc(sayTxt)}">
+    <div class="hd"><span class="flag">${flag(s.country)}</span><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:19px">${s.dir === 'out' ? '➡️ ' : '⬅️ '}${esc(cname(s.country))}</div><div class="muted" style="font-size:15px;overflow-wrap:anywhere">${esc(p?.name || '')} · ${esc(s.ref)}</div></div>${status}</div>
+    <div style="font-size:16px;overflow-wrap:anywhere">${esc(lines)}</div>
+    <div class="track">${st.map((n, k) => `<div class="stg ${k < s.stage ? 'done' : k === s.stage ? 'now' : ''}"><span class="dot">${STAGE_IC[k]}</span>${n}</div>`).join('')}</div>
+    <div class="row" style="gap:6px"><span class="muted" style="font-size:14px">📅 ${fmtDate(s.eta)}${s.vessel ? ' · 🛳️ ' + esc(s.vessel) : ''}${s.container ? ' · 📦 ' + esc(s.container) : ''}</span><span class="sp"></span><span class="pill ${dc === DOCS.length ? 'good' : 'warn'}">📑 ${dc}/${DOCS.length}</span></div>
+    <div class="row">${clickable ? `<button class="btn sm" data-act="open-ship" data-id="${s.id}">🔎 ${T('पूरा देखो','Details')}</button>` : ''}<span class="sp"></span>
+    ${s.stage < 4 ? `<button class="btn pri sm" data-act="ship-next" data-id="${s.id}" data-say="${esc(T('अगला कदम','Next step') + ': ' + st[s.stage + 1])}">${STAGE_IC[s.stage + 1]} ${st[s.stage + 1]} ➡️</button>` : ''}</div>
+  </div>`;
+}
+function routeSVG(s){
+  const W0 = 520, H0 = 150, x1 = 50, x2 = 470, y = 105, cx = 260, cy = 10;
+  const from = s.dir === 'out' ? (s.pol || 'Nhava Sheva') : (s.pol || cport(s.country)), to = s.dir === 'out' ? (s.pod || cport(s.country)) : (s.pod || 'Nhava Sheva');
+  const fromC = s.dir === 'out' ? 'IN' : s.country, toC = s.dir === 'out' ? s.country : 'IN';
+  const created = s.created || addDays(s.eta, -20), total = Math.max(1, (new Date(s.eta) - new Date(created)) / DAY), el = (new Date(today()) - new Date(created)) / DAY;
+  const tByStage = [0.04, 0.15, 0.6, 0.92, 1][s.stage];
+  const tt = s.stage === 4 ? 1 : s.stage === 2 ? clamp(el / total, 0.2, 0.88) : tByStage;
+  const q = t => [(1 - t) ** 2 * x1 + 2 * (1 - t) * t * cx + t * t * x2, (1 - t) ** 2 * y + 2 * (1 - t) * t * cy + t * t * y];
+  const [sx, sy] = q(tt), pts = []; for (let k = 0; k <= 30; k++){ const t = k / 30 * tt; pts.push(q(t).map(v => v.toFixed(1)).join(',')); }
+  return `<div class="route"><svg viewBox="0 0 ${W0} ${H0}" role="img" aria-label="route">
+    <rect class="sea" x="0" y="0" width="${W0}" height="${H0}" rx="12"/>
+    <path class="path" d="M${x1},${y} Q${cx},${cy} ${x2},${y}"/><polyline class="done" points="${pts.join(' ')}"/>
+    <circle class="port" cx="${x1}" cy="${y}" r="6"/><circle class="port" cx="${x2}" cy="${y}" r="6"/>
+    <text x="${x1}" y="${y + 24}" text-anchor="start" class="pl">${flag(fromC)} ${esc(from)}</text>
+    <text x="${x2}" y="${y + 24}" text-anchor="end" class="pl">${esc(to)} ${flag(toC)}</text>
+    <text x="${sx}" y="${sy + 9}" text-anchor="middle" font-size="30">${s.stage >= 4 ? '✅' : s.stage <= 1 ? '📦' : '🚢'}</text>
+    <text x="${W0 / 2}" y="${H0 - 6}" text-anchor="middle" class="ps">${esc(STAGES()[s.stage])} · ${fmtDate(s.eta)}</text>
+  </svg></div>`;
+}
+
+/* ----- money ----- */
+V.money = () => {
+  if (!seeMoney()) return noAccess();
+  const ps = S.parties.map(p => ({p, b: C.bal[p.id] || 0}));
+  const le = ps.filter(x => x.b > 0).sort((a, b) => b.b - a.b), de = ps.filter(x => x.b < 0).sort((a, b) => a.b - b.b);
+  const ag = aging('sale'), ap = aging('buy');
+  const pays = S.txns.filter(x => x.type === 'payIn' || x.type === 'payOut').sort((a, b) => b.d.localeCompare(a.d)).slice(0, 12);
+  return `<h2>💰 ${T('पैसा','Money')}</h2>
+  <div class="tiles" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+    <div class="tile good" data-say="${esc(T('लेना है','To receive') + ' ' + sayMoney(sum(le, x => x.b)))}"><span class="arrow">⬇️</span><span class="ic">💰</span><span class="lbl">${T('लेना है','To receive')}</span><span class="val num">${money(sum(le, x => x.b))}</span><span class="sub">⏰ ${money(ag.late)} ${T('लेट','overdue')}</span></div>
+    <div class="tile bad" data-say="${esc(T('देना है','To pay') + ' ' + sayMoney(sum(de, x => -x.b)))}"><span class="arrow">⬆️</span><span class="ic">💸</span><span class="lbl">${T('देना है','To pay')}</span><span class="val num">${money(sum(de, x => -x.b))}</span><span class="sub">⏰ ${money(ap.late)} ${T('लेट','overdue')}</span></div>
+  </div>
+  <div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+    <button class="act good" data-act="wiz" data-type="payIn" data-say="${TYPE_NM('payIn')}"><span class="ic">💰</span>${TYPE_NM('payIn')}</button>
+    <button class="act bad" data-act="wiz" data-type="payOut" data-say="${TYPE_NM('payOut')}"><span class="ic">💸</span>${TYPE_NM('payOut')}</button>
+  </div>
+  <div class="two-col">
+    <div class="panel"><h3>⏳ ${T('लेना है — कितना पुराना','To receive — how old')}</h3>${agingBars(ag)}</div>
+    <div class="panel"><h3>⏳ ${T('देना है — कितना पुराना','To pay — how old')}</h3>${agingBars(ap)}</div>
+  </div>
+  <h3>⬇️ ${T('हमें लोगों से पैसा लेना है','Money people owe us')}</h3>
+  <div class="grid">${le.map(x => partyCard(x.p, x.b)).join('') || `<div class="empty">${T('हिसाब बराबर','All settled')}</div>`}</div>
+  <h3>⬆️ ${T('हमें लोगों को पैसा देना है','Money we owe people')}</h3>
+  <div class="grid">${de.map(x => partyCard(x.p, x.b)).join('') || `<div class="empty">${T('हिसाब बराबर','All settled')}</div>`}</div>
+  <h3>${T('हाल के पैसे के लेन-देन','Recent payments')}</h3>${txnList(pays, true)}`;
+};
+function aging(type){
+  const b = {notdue: 0, d30: 0, d60: 0, d90: 0, late: 0};
+  for (const x of S.txns) if (x.type === type){ const s = C.inv[x.id]; if (!s || s.open <= .5) continue; const o = s.over;
+    if (!o) b.notdue += s.open; else { b.late += s.open; if (o <= 30) b.d30 += s.open; else if (o <= 60) b.d60 += s.open; else b.d90 += s.open; } }
+  return b;
+}
+function agingBars(b){
+  const rows = [[T('समय बाकी है','Not due yet'), b.notdue, 'good'], [T('1–30 दिन लेट','1–30 days late'), b.d30, 'warn'], [T('31–60 दिन लेट','31–60 days late'), b.d60, 'cargo'], [T('60+ दिन लेट','60+ days late'), b.d90, 'bad']];
+  const mx = Math.max(1, ...rows.map(r => r[1]));
+  return `<div class="hbars">${rows.map(r => `<div class="hb" data-say="${esc(r[0] + ' ' + sayMoney(r[1]))}"><span class="nm">${r[0]}</span><span class="v num">${money(r[1])}</span><span class="track2"><i class="${r[2]}" style="width:${r[1] ? Math.max(2, r[1] / mx * 100) : 0}%"></i></span></div>`).join('')}</div>`;
+}
+const noAccess = () => `<div class="empty-big"><span class="ic">🔒</span><b>${T('ये हिस्सा मालिक / मुनीम के लिए है','This part is for the owner / accountant')}</b></div>`;
+
+/* ----- invoices ----- */
+V.invoices = () => {
+  if (!seeMoney()) return noAccess();
+  let list = S.txns.filter(x => x.type === invKind);
+  if (invFilter === 'open') list = list.filter(x => C.inv[x.id]?.status !== 'paid');
+  if (invFilter === 'late') list = list.filter(x => C.inv[x.id]?.over > 0);
+  if (invFilter === 'paid') list = list.filter(x => C.inv[x.id]?.status === 'paid');
+  list.sort((a, b) => b.d.localeCompare(a.d));
+  const f = (k, l) => `<button class="${invFilter === k ? 'on' : ''}" data-act="ifilter" data-f="${k}">${l}</button>`;
+  return `<h2>🧾 ${T('बिल / इनवॉइस','Invoices & bills')}</h2>
+  <div class="seg"><button class="${invKind === 'sale' ? 'on' : ''}" data-act="ikind" data-k="sale">📤 ${T('बिक्री के बिल','Sales invoices')}</button><button class="${invKind === 'buy' ? 'on' : ''}" data-act="ikind" data-k="buy">📥 ${T('खरीद के बिल','Purchase bills')}</button></div>
+  <div class="seg">${f('open', '⏳ ' + T('बाकी','Unpaid'))}${f('late', '⏰ ' + T('लेट','Overdue'))}${f('paid', '✅ ' + T('चुका','Paid'))}${f('all', T('सब','All'))}</div>
+  <div class="list">${list.map(x => { const p = party(x.party), s = C.inv[x.id] || {};
+    return `<button class="li" data-act="open-inv" data-id="${x.id}" data-say="${esc((x.inv || '') + ' ' + (p?.name || '') + ' ' + sayMoney(x.amount))}">${pic(p, 'sm')}<div class="body"><div class="t1">${esc(x.inv || x.ref || '—')} · ${esc(p?.name || '')}</div><div class="t2">${fmtDate(x.d)} · ${T('तारीख तक','due')} ${fmtDate(x.due)} · ${esc(linesTxt(x))}</div></div>
+    <div class="rt"><div class="amt num" style="font-size:18px">${money(x.amount)}</div>${x.cur && x.cur !== 'INR' ? `<div class="t2 num">${fmoney(x.famount, x.cur)}</div>` : ''}${s.status === 'part' ? `<div class="t2 num">${T('बाकी','open')} ${money(s.open)}</div>` : ''}${statusPill(x)}</div></button>`; }).join('') || `<div class="empty">${T('अभी कुछ नहीं है','Nothing here yet')}</div>`}</div>`;
+};
+
+/* ----- expenses ----- */
+V.expenses = () => {
+  if (!seeMoney()) return noAccess();
+  const list = S.expenses.slice().sort((a, b) => b.d.localeCompare(a.d));
+  const m0 = today().slice(0, 7), byCat = groupBy(S.expenses.filter(e => e.d.startsWith(m0)), e => e.cat);
+  const tot = sum(S.expenses.filter(e => e.d.startsWith(m0)), e => e.amount), mx = Math.max(1, ...Object.values(byCat).map(a => sum(a, e => e.amount)));
+  return `<div class="row"><h2>🧾 ${T('खर्चे','Expenses')}</h2><span class="sp"></span><button class="btn pri" data-act="wiz" data-type="exp">➕ ${T('नया खर्चा','New expense')}</button></div>
+  <div class="panel"><div class="row"><h3>${T('इस महीने','This month')}</h3><span class="sp"></span><span class="amt num">${money(tot)}</span></div>
+  <div class="hbars">${Object.entries(byCat).sort((a, b) => sum(b[1], e => e.amount) - sum(a[1], e => e.amount)).map(([k, a]) => { const v = sum(a, e => e.amount); return `<div class="hb" data-say="${esc(expNm(k) + ' ' + sayMoney(v))}"><span class="nm">${EXP[k]?.[0] || ''} ${esc(expNm(k))}</span><span class="v num">${money(v)}</span><span class="track2"><i class="cargo" style="width:${v / mx * 100}%"></i></span></div>`; }).join('') || `<div class="muted">${T('इस महीने कोई खर्चा नहीं','No expenses this month')}</div>`}</div></div>
+  <div class="list">${list.map(e => { const s = e.ship ? ship(e.ship) : null; return `<div class="li" data-say="${esc(expNm(e.cat) + ' ' + sayMoney(e.amount))}"><span class="ic">${EXP[e.cat]?.[0] || '🧾'}</span><div class="body"><div class="t1">${esc(expNm(e.cat))}${e.note ? ' · ' + esc(e.note) : ''}</div><div class="t2">${fmtDate(e.d)}${s ? ` · ${flag(s.country)} ${esc(s.ref)}` : ''}</div></div><div class="amt num bad" style="font-size:18px">${money(e.amount)}</div>
+    ${isOwner() ? `<button class="btn sm ${armed === 'dx-' + e.id ? 'armed' : 'ghost'}" data-act="del-exp" data-id="${e.id}">${armed === 'dx-' + e.id ? T('पक्का?','Sure?') : '🗑️'}</button>` : ''}</div>`; }).join('') || `<div class="empty">${T('अभी कुछ नहीं है','Nothing here yet')}</div>`}</div>`;
+};
+
+/* ----- reports ----- */
+V.reports = () => {
+  if (!seeMoney()) return noAccess();
+  const months = []; { const d = new Date(); d.setDate(1); for (let k = 5; k >= 0; k--){ const x = new Date(d.getFullYear(), d.getMonth() - k, 1); months.push(`${x.getFullYear()}-${pad2(x.getMonth() + 1)}`); } }
+  const mData = months.map(m => {
+    const sales = S.txns.filter(x => x.type === 'sale' && x.d.startsWith(m)), buys = S.txns.filter(x => x.type === 'buy' && x.d.startsWith(m));
+    const exp = sum(S.expenses.filter(e => e.d.startsWith(m)), e => e.amount);
+    const rev = sum(sales, x => x.amount), cogs = sum(sales, x => sum(x.lines || [], lineCost));
+    return {m, rev, buy: sum(buys, x => x.amount), exp, profit: rev - cogs - exp};
+  });
+  const cur = mData[5];
+  const allSales = S.txns.filter(x => x.type === 'sale');
+  const itemP = {}; for (const x of allSales) for (const l of x.lines || []){ const r = itemP[l.item] = itemP[l.item] || {rev: 0, cost: 0, qty: 0}; r.rev += l.qty * l.rate; r.cost += lineCost(l); r.qty += l.qty; }
+  const itemRows = Object.entries(itemP).map(([id, r]) => ({i: item(id), ...r, p: r.rev - r.cost})).filter(r => r.i).sort((a, b) => b.p - a.p);
+  const cty = {}; for (const x of allSales){ const p = party(x.party), s = x.ship ? ship(x.ship) : null, cc = s?.country || p?.country || '??'; if (cc === 'IN') continue; cty[cc] = (cty[cc] || 0) + x.amount; }
+  const ctyRows = Object.entries(cty).sort((a, b) => b[1] - a[1]); const ctyTot = sum(ctyRows, r => r[1]);
+  const cust = {}; for (const x of allSales) cust[x.party] = (cust[x.party] || 0) + x.amount;
+  const custRows = Object.entries(cust).map(([id, v]) => ({p: party(id), v})).filter(r => r.p).sort((a, b) => b.v - a.v).slice(0, 6);
+  const fyStart = (() => { const d = new Date(); const y = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1; return `${y}-04-01`; })();
+  const exportFOB = sum(allSales.filter(x => x.ship && x.d >= fyStart && (ship(x.ship)?.country || 'IN') !== 'IN'), x => x.amount);
+  const incent = exportFOB * ((+S.settings.rodtep || 0) + (+S.settings.drawback || 0)) / 100;
+  const shipP = S.ships.filter(s => s.dir === 'out').map(s => { const x = S.txns.find(t => t.id === s.txn); if (!x) return null; const rev = x.amount, cost = sum(x.lines || [], lineCost), e = expOfShip(s.id); return {s, rev, cost, e, p: rev - cost - e}; }).filter(Boolean).sort((a, b) => b.s.eta.localeCompare(a.s.eta)).slice(0, 6);
+  const mx = (rows, f) => Math.max(1, ...rows.map(f));
+  return `<h2>📊 ${T('रिपोर्ट','Reports')}</h2>
+  <div class="tiles">
+    <div class="tile info" data-say="${esc(T('इस महीने बिक्री','Sales this month') + ' ' + sayMoney(cur.rev))}"><span class="ic">📤</span><span class="lbl">${T('इस महीने बिक्री','Sales this month')}</span><span class="val num">${money(cur.rev)}</span></div>
+    <div class="tile cargo" data-say="${esc(T('इस महीने खरीद','Purchases this month') + ' ' + sayMoney(cur.buy))}"><span class="ic">📥</span><span class="lbl">${T('इस महीने खरीद','Purchases')}</span><span class="val num">${money(cur.buy)}</span></div>
+    <div class="tile" data-say="${esc(T('इस महीने खर्चे','Expenses this month') + ' ' + sayMoney(cur.exp))}"><span class="ic">🧾</span><span class="lbl">${T('खर्चे','Expenses')}</span><span class="val num">${money(cur.exp)}</span></div>
+    <div class="tile ${cur.profit >= 0 ? 'good' : 'bad'}" data-say="${esc((cur.profit >= 0 ? T('इस महीने मुनाफ़ा','Profit this month') : T('इस महीने नुकसान','Loss this month')) + ' ' + sayMoney(cur.profit))}"><span class="ic">${cur.profit >= 0 ? '😊' : '😟'}</span><span class="lbl">${cur.profit >= 0 ? T('मुनाफ़ा','Profit') : T('नुकसान','Loss')}</span><span class="val num">${smoney(cur.profit)}</span><span class="sub">${T('बिक्री − माल की लागत − खर्चे','sales − cost of goods − expenses')}</span></div>
+  </div>
+  <div class="panel"><h3>📅 ${T('पिछले 6 महीने','Last 6 months')}</h3>${monthChart(mData)}</div>
+  <div class="two-col">
+    <div class="panel"><h3>😊 ${T('किस माल में कितना मुनाफ़ा','Profit by item')}</h3><div class="hbars">${itemRows.map(r => `<div class="hb" data-say="${esc(r.i.name + ' ' + sayMoney(r.p))}"><span class="nm">${r.i.icon} ${esc(r.i.name)} <small class="muted">${r.rev ? Math.round(r.p / r.rev * 100) : 0}%</small></span><span class="v num" style="color:var(--${r.p >= 0 ? 'good' : 'bad'})">${smoney(r.p)}</span><span class="track2"><i class="${r.p >= 0 ? 'good' : 'bad'}" style="width:${Math.abs(r.p) / mx(itemRows, x => Math.abs(x.p)) * 100}%"></i></span></div>`).join('') || `<div class="muted">${T('अभी कुछ नहीं है','Nothing yet')}</div>`}</div></div>
+    <div class="panel"><h3>🌍 ${T('किस देश में कितना माल गया','Exports by country')}</h3><div class="hbars">${ctyRows.map(([cc, v]) => `<div class="hb" data-say="${esc(cname(cc) + ' ' + sayMoney(v))}"><span class="nm">${flag(cc)} ${esc(cname(cc))} <small class="muted">${Math.round(v / ctyTot * 100)}%</small></span><span class="v num">${money(v)}</span><span class="track2"><i style="width:${v / ctyRows[0][1] * 100}%"></i></span></div>`).join('') || `<div class="muted">${T('अभी कुछ नहीं है','Nothing yet')}</div>`}</div></div>
+    <div class="panel"><h3>🏆 ${T('सबसे बड़े ग्राहक','Top buyers')}</h3><div class="hbars">${custRows.map(r => `<div class="hb" data-say="${esc(r.p.name + ' ' + sayMoney(r.v))}"><span class="nm">${flag(r.p.country)} ${esc(r.p.name)}</span><span class="v num">${money(r.v)}</span><span class="track2"><i class="cargo" style="width:${r.v / custRows[0].v * 100}%"></i></span></div>`).join('') || `<div class="muted">${T('अभी कुछ नहीं है','Nothing yet')}</div>`}</div></div>
+    <div class="panel"><h3>🚢 ${T('हर शिपमेंट का मुनाफ़ा','Profit per shipment')}</h3><div class="list" style="box-shadow:none">${shipP.map(r => `<button class="li" data-act="open-ship" data-id="${r.s.id}" data-say="${esc(r.s.ref + ' ' + sayMoney(r.p))}"><span class="ic">${flag(r.s.country)}</span><div class="body"><div class="t1">${esc(r.s.ref)}</div><div class="t2 num">${T('बिक्री','Sale')} ${money(r.rev)} · ${T('लागत','Cost')} ${money(r.cost)} · ${T('खर्चे','Exp')} ${money(r.e)}</div></div><span class="amt num ${r.p >= 0 ? 'good' : 'bad'}" style="font-size:18px">${smoney(r.p)}</span></button>`).join('') || `<div class="empty">${T('अभी कुछ नहीं है','Nothing yet')}</div>`}</div></div>
+  </div>
+  <div class="panel" data-say="${esc(T('सरकार से मिलने का अनुमान','Estimated government incentives') + ' ' + sayMoney(incent))}"><div class="row"><span style="font-size:36px">🏛️</span><div style="flex:1;min-width:0"><b>${T('सरकार से मिलना है (RoDTEP + Drawback) — अनुमान','Government incentives (RoDTEP + Drawback) — estimate')}</b><div class="muted" style="font-size:15px">${T('इस साल का एक्सपोर्ट','Exports this FY')}: ${money(exportFOB)} × ${(+S.settings.rodtep || 0) + (+S.settings.drawback || 0)}% · ${T('सही दर ⚙️ सेटिंग में डालें','set real rates in ⚙️ Settings')}</div></div><span class="amt num good">${money(incent)}</span></div></div>
+  <div class="panel"><h3>⬇️ ${T('Excel / CSV फ़ाइल निकालो','Download Excel / CSV')}</h3><div class="row">
+    <button class="btn" data-act="csv" data-k="stock">📦 ${T('माल','Stock')}</button><button class="btn" data-act="csv" data-k="parties">👥 ${T('लोग + बकाया','People + balances')}</button><button class="btn" data-act="csv" data-k="txns">📒 ${T('सब एंट्री','All entries')}</button><button class="btn" data-act="csv" data-k="ships">🚢 ${T('शिपमेंट','Shipments')}</button><button class="btn" data-act="csv" data-k="expenses">🧾 ${T('खर्चे','Expenses')}</button></div></div>`;
+};
+function monthChart(rows){
+  const W0 = 560, H0 = 220, pl = 54, pr = 10, pt = 14, pb = 34, mx = Math.max(1, ...rows.flatMap(r => [r.rev, r.buy, r.exp])) * 1.1;
+  const gw = (W0 - pl - pr) / rows.length, bw = Math.min(22, gw / 4.2), Y = v => pt + (1 - v / mx) * (H0 - pt - pb);
+  const tick = [0, mx / 2, mx].map(v => `<line class="grid-l" x1="${pl}" x2="${W0 - pr}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${pl - 6}" y="${Y(v) + 4}" text-anchor="end">${v >= 1e5 ? (v / 1e5).toFixed(1) + 'L' : Math.round(v / 1000) + 'k'}</text>`).join('');
+  const bars = rows.map((r, k) => { const x0 = pl + k * gw + (gw - bw * 3 - 4) / 2; const mo = new Date(r.m + '-15').toLocaleDateString(hi() ? 'hi-IN' : 'en-IN', {month: 'short'});
+    return [['rev', 'b-s'], ['buy', 'b-b'], ['exp', 'b-e']].map(([f, c], j) => `<rect class="${c}" x="${x0 + j * (bw + 2)}" y="${Y(r[f])}" width="${bw}" height="${Math.max(0, H0 - pb - Y(r[f]))}" rx="3"><title>${money(r[f])}</title></rect>`).join('') +
+      `<text class="ax" x="${pl + k * gw + gw / 2}" y="${H0 - 18}" text-anchor="middle">${mo}</text><text class="lbl" x="${pl + k * gw + gw / 2}" y="${H0 - 4}" text-anchor="middle" style="fill:var(--${r.profit >= 0 ? 'good' : 'bad'})">${r.profit >= 0 ? '+' : '−'}${Math.abs(r.profit) >= 1e5 ? (Math.abs(r.profit) / 1e5).toFixed(1) + 'L' : Math.round(Math.abs(r.profit) / 1000) + 'k'}</text>`; }).join('');
+  return `<div class="chart" style="box-shadow:none;padding:0"><svg viewBox="0 0 ${W0} ${H0}" role="img" aria-label="monthly chart">${tick}${bars}</svg>
+  <div class="legend"><span><i style="background:var(--accent)"></i>${T('बिक्री','Sales')}</span><span><i style="background:var(--cargo)"></i>${T('खरीद','Purchases')}</span><span><i style="background:var(--muted)"></i>${T('खर्चे','Expenses')}</span><span style="color:var(--good);font-weight:700">+ ${T('नीचे = मुनाफ़ा','below = profit')}</span></div></div>`;
+}
+
+/* ----- activity ----- */
+const names = {}, asked = new Set();
+function whoName(r){
+  if (!r) return '';
+  if (mode === 'cloud' && r.by && !ROLES[r.by]){ if (names[r.by] !== undefined) return names[r.by] || T('कोई','Someone'); if (userCap && !asked.has(r.by)){ asked.add(r.by); userCap.profiles([r.by]).then(ps => { for (const k in ps) names[k] = ps[k].name || ''; names[r.by] = names[r.by] ?? ''; schedule(); }).catch(() => { names[r.by] = ''; }); } return '…'; }
+  return roleNm(r.role || r.by);
+}
+V.activity = () => {
+  const list = S.log.slice().sort((a, b) => b.at.localeCompare(a.at)).slice(0, 150);
+  return `<h2>🕘 ${T('किसने क्या किया','Who did what')}</h2>
+  ${mode === 'cloud' ? `<div class="note info">👥 ${T('टीम के सब लोग एक ही डेटा देखते हैं — हर काम के साथ नाम लिखा जाता है।','Your whole team sees the same data — each action is recorded with a name.')}</div>` : ''}
+  <div class="list">${list.map(l => `<div class="li" data-say="${esc(whoName(l) + '. ' + l.text)}"><span class="ic">${esc(l.ic || '📝')}</span><div class="body"><div class="t1">${esc(l.text)}</div><div class="t2">${ROLES[l.role]?.[0] || ''} ${esc(whoName(l))} · ${fmtDT(l.at)}</div></div></div>`).join('') || `<div class="empty">${T('अभी कुछ नहीं है','Nothing here yet')}</div>`}</div>`;
+};
+
+/* ================= SHEETS ================= */
+const SH = {};
+SH.item = () => {
+  const i = item(sheet.id); if (!i) return closeMissing();
+  const st = stockOf(i.id), low = st < (+i.min || 0), d = C.days[i.id], avg = C.sold60[i.id] / 60;
+  const reorder = Math.max(0, Math.ceil(avg * 45 - st - (C.incoming[i.id] || 0)));
+  const sales = S.txns.filter(x => x.type === 'sale' && (x.lines || []).some(l => l.item === i.id)), buys = S.txns.filter(x => x.type === 'buy' && (x.lines || []).some(l => l.item === i.id));
+  const agg = arr => { const m = {}; for (const x of arr) for (const l of x.lines) if (l.item === i.id){ const r = m[x.party] = m[x.party] || {q: 0, a: 0}; r.q += l.qty; r.a += l.qty * l.rate; } return Object.entries(m).map(([pid, r]) => ({p: party(pid), ...r})).filter(r => r.p).sort((a, b) => b.q - a.q); };
+  const aggList = rows => rows.length ? `<div class="list">${rows.map(r => `<button class="li" data-act="open-party" data-id="${r.p.id}" data-say="${esc(r.p.name + ', ' + qtyFmt(r.q) + ' ' + i.unit)}">${pic(r.p, 'sm')}<div class="body"><div class="t1">${esc(r.p.name)}</div><div class="t2">${flag(r.p.country)} ${esc(cname(r.p.country))}</div></div><div class="rt"><div class="num" style="font-weight:700">${qtyFmt(r.q)} ${esc(i.unit)}</div>${seeMoney() ? `<div class="t2 num">${money(r.a)}</div>` : ''}</div></button>`).join('')}</div>` : `<div class="list"><div class="empty">${T('अभी कुछ नहीं है','Nothing here yet')}</div></div>`;
+  return `<div class="sheet-hd"><h2>${esc(i.name)}</h2>${P.role !== 'worker' ? `<button class="x" data-act="item-form" data-id="${i.id}" aria-label="edit">✏️</button>` : ''}<button class="x" data-act="close" aria-label="close">✕</button></div>
+  <div class="row" style="gap:16px">${pic(i, 'big')}<div style="flex:1;min-width:0" data-say="${esc(i.name + '. ' + qtyFmt(st) + ' ' + i.unit + '. ' + daysTxt(d))}">
+    <div class="amt num" style="font-size:36px;color:${low ? 'var(--bad)' : 'var(--ink)'}">${qtyFmt(st)} <small style="font-size:20px">${esc(i.unit)}</small></div>
+    <div class="row" style="gap:6px"><span class="pill ${d < 15 ? 'bad' : d < 30 ? 'warn' : 'good'}">⏳ ${daysTxt(d)}</span>${low ? `<span class="pill bad">⚠️ ${T('कम है','Low')}</span>` : ''}${C.incoming[i.id] ? `<span class="pill info">📥 ${qtyFmt(C.incoming[i.id])} ${T('आ रहा','coming')}</span>` : ''}</div>
+    <div class="muted" style="font-size:14px">${i.hs ? 'HS ' + esc(i.hs) + ' · ' : ''}${i.pack ? `${qtyFmt(i.pack)} ${esc(i.unit)} / ${T('बोरी-पेटी','package')}` : ''}</div></div></div>
+  ${reorder > 0 && P.role !== 'worker' ? `<div class="alert info" data-say="${esc(T('और मँगाओ','Order more') + ' ' + qtyFmt(reorder) + ' ' + i.unit)}"><span class="ic">🛒</span><span><b>${T('सुझाव: और मँगाओ','Suggestion: order more')} — ${qtyFmt(reorder)} ${esc(i.unit)}</b><span class="muted">${T('पिछले 60 दिन की बिक्री के हिसाब से 45 दिन का माल','45 days of stock, based on the last 60 days of sales')}</span></span></div>` : ''}
+  ${seeMoney() ? `<div class="row" style="gap:10px"><span class="pill good num" style="font-size:17px;padding:6px 14px" data-say="${esc(T('बेचने का भाव','Selling price') + ' ' + i.sell)}">🏷️ ${T('बेचने का','Sell')}: ${money(i.sell)} <small>($${(i.sell / fxOf('USD')).toFixed(2)})</small></span><span class="pill num" style="font-size:17px;padding:6px 14px" data-say="${esc(T('खरीद का भाव','Buying price') + ' ' + i.buy)}">🛒 ${T('खरीद का','Buy')}: ${money(i.buy)}</span><span class="pill info">${T('मार्जिन','Margin')} ${i.sell ? Math.round((i.sell - i.buy) / i.sell * 100) : 0}%</span></div>` : ''}
+  <div class="actions" style="grid-template-columns:repeat(${seeMoney() ? 3 : 2},minmax(0,1fr))">
+    <button class="act good" data-act="adj" data-id="${i.id}" data-m="in" data-say="${T('माल आया','Stock in')}"><span class="ic">➕</span>${T('माल आया','Stock in')}</button>
+    <button class="act bad" data-act="adj" data-id="${i.id}" data-m="out" data-say="${T('माल गया','Stock out')}"><span class="ic">➖</span>${T('माल गया','Stock out')}</button>
+    ${seeMoney() ? `<button class="act cargo" data-act="price" data-id="${i.id}" data-say="${T('भाव बदलो','Change price')}"><span class="ic">🏷️</span>${T('भाव बदलो','Change price')}</button>` : ''}
+  </div>
+  ${seeMoney() ? `<h3>📈 ${T('भाव कैसे बदला','Price over time')}</h3>${priceChart(i)}` : ''}
+  <h3>📤 ${T('किसको कितना माल दिया','Who got how much')}</h3>${aggList(agg(sales))}
+  <h3>📥 ${T('किससे कितना माल आया','Who supplied how much')}</h3>${aggList(agg(buys))}
+  ${isOwner() ? `<button class="btn ${armed === 'del-item' ? 'armed' : 'ghost'}" data-act="del-item" data-id="${i.id}">${armed === 'del-item' ? T('पक्का? फिर दबाओ','Sure? Press again') : '🗑️ ' + T('ये माल मिटाओ','Delete this item')}</button>` : ''}`;
+};
+function priceChart(i){
+  const h = (i.hist || []).slice(-12); if (h.length < 2) return `<div class="chart"><div class="empty">${T('भाव अभी एक बार ही डाला है','Only one price so far')}</div></div>`;
+  const W0 = 340, H0 = 170, pl = 48, pr = 14, pt = 12, pb = 26;
+  const vals = h.flatMap(x => [x.sell, x.buy]); let mn = Math.min(...vals), mx = Math.max(...vals); const pd = (mx - mn) * .15 || mx * .1 || 1; mn = Math.max(0, mn - pd); mx += pd;
+  const X = k => pl + k * (W0 - pl - pr) / (h.length - 1), Y = v => pt + (mx - v) * (H0 - pt - pb) / (mx - mn);
+  const line = key => h.map((x, k) => `${X(k).toFixed(1)},${Y(x[key]).toFixed(1)}`).join(' ');
+  return `<div class="chart"><svg viewBox="0 0 ${W0} ${H0}" role="img" aria-label="price chart">
+    ${[mn, (mn + mx) / 2, mx].map(v => `<line class="grid-l" x1="${pl}" x2="${W0 - pr}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${pl - 6}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v).toLocaleString('en-IN')}</text>`).join('')}
+    <polygon class="ar" points="${X(0)},${Y(mn)} ${line('sell')} ${X(h.length - 1)},${Y(mn)}"/><polyline class="ln-b" points="${line('buy')}"/><polyline class="ln-s" points="${line('sell')}"/>
+    ${h.map((x, k) => `<circle class="pt-s" cx="${X(k)}" cy="${Y(x.sell)}" r="${k === h.length - 1 ? 5.5 : 3}"/><circle class="pt-b" cx="${X(k)}" cy="${Y(x.buy)}" r="${k === h.length - 1 ? 5.5 : 3}"/>`).join('')}
+    <text class="ax" x="${X(0)}" y="${H0 - 6}">${fmtDate(h[0].d)}</text><text class="ax" x="${X(h.length - 1)}" y="${H0 - 6}" text-anchor="end">${fmtDate(h[h.length - 1].d)}</text>
+  </svg><div class="legend"><span><i style="background:var(--accent);height:4px"></i>🏷️ ${T('बेचने का','Sell')}</span><span><i style="background:var(--cargo);height:4px"></i>🛒 ${T('खरीद का','Buy')}</span></div></div>`;
+}
+function waLink(phone, text){ const d = String(phone || '').replace(/\D/g, ''); return d.length >= 8 ? `https://wa.me/${d}?text=${encodeURIComponent(text)}` : ''; }
+SH.party = () => {
+  const p = party(sheet.id); if (!p) return closeMissing();
+  const b = C.bal[p.id] || 0, tx = S.txns.filter(x => x.party === p.id).sort((a, c) => c.d.localeCompare(a.d)), ov = C.pOver[p.id];
+  const aggItems = type => { const m = {}; for (const x of tx.filter(x => x.type === type)) for (const l of x.lines || []){ const r = m[l.item] = m[l.item] || {q: 0, a: 0}; r.q += l.qty; r.a += l.qty * l.rate; } return Object.entries(m).map(([iid, r]) => ({i: item(iid), ...r})).filter(r => r.i); };
+  const rows = rs => `<div class="list">${rs.map(r => `<button class="li" data-act="open-item" data-id="${r.i.id}" data-say="${esc(r.i.name + ' ' + qtyFmt(r.q) + ' ' + r.i.unit)}">${pic(r.i, 'sm')}<div class="body"><div class="t1">${esc(r.i.name)}</div></div><div class="rt"><div class="num" style="font-weight:700">${qtyFmt(r.q)} ${esc(r.i.unit)}</div>${seeMoney() ? `<div class="t2 num">${money(r.a)}</div>` : ''}</div></button>`).join('')}</div>`;
+  const given = aggItems('sale'), got = aggItems('buy'), ps = S.ships.filter(s => s.party === p.id && s.stage < 4);
+  const openInv = tx.filter(x => x.type === 'sale' && C.inv[x.id]?.open > .5);
+  const msg = p.country === 'IN' && hi()
+    ? `नमस्ते ${p.name}, आपका ${money(b)} बकाया है${openInv.length ? ` (${openInv.map(x => x.inv).join(', ')})` : ''}। कृपया जल्दी भुगतान करें। धन्यवाद — ${S.settings.company || ''}`
+    : `Dear ${p.name}, a payment of ${money(b)}${p.cur && p.cur !== 'INR' ? ` (≈ ${fmoney(b / fxOf(p.cur), p.cur)})` : ''} is pending${openInv.length ? ` against ${openInv.map(x => x.inv).join(', ')}` : ''}. Kindly arrange the remittance. Thank you — ${S.settings.company || ''}`;
+  const wa = b > 0 ? waLink(p.phone, msg) : '';
+  return `<div class="sheet-hd"><h2>${esc(p.name)}</h2>${P.role !== 'worker' ? `<button class="x" data-act="party-form" data-id="${p.id}" aria-label="edit">✏️</button>` : ''}<button class="x" data-act="close" aria-label="close">✕</button></div>
+  <div class="row" style="gap:16px">${pic(p, 'big')}<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+    <div style="font-size:18px">${flag(p.country)} ${esc(cname(p.country))}${p.cur && p.cur !== 'INR' ? ` · 💱 ${p.cur}` : ''}</div>
+    ${p.phone ? `<div class="num" style="font-weight:700;user-select:all">📞 ${esc(p.phone)}</div>` : ''}
+    <div class="row" style="gap:6px"><span class="pill">${p.kind === 'customer' ? '🛍️ ' + T('ग्राहक','Buyer') : p.kind === 'supplier' ? '🏭 ' + T('सप्लायर','Supplier') : '🔁 ' + T('दोनों','Both')}</span>${+p.terms ? `<span class="pill">⏳ ${p.terms} ${T('दिन उधार','days credit')}</span>` : ''}${+p.limit ? `<span class="pill">🚧 ${money(p.limit)}</span>` : ''}</div></div></div>
+  ${seeMoney() ? `<div class="tile ${b > 0 ? 'good' : b < 0 ? 'bad' : ''}" style="min-height:0" data-say="${esc(b > 0 ? T('ये हमें देंगे','They will pay us') + ' ' + sayMoney(b) : b < 0 ? T('हमें इन्हें देना है','We must pay them') + ' ' + sayMoney(b) : T('हिसाब बराबर','All settled'))}">
+    <span class="lbl">${b > 0 ? '⬇️ ' + T('ये हमें देंगे','They will pay us') : b < 0 ? '⬆️ ' + T('हमें इन्हें देना है','We must pay them') : '🤝 ' + T('हिसाब बराबर','All settled')}</span><span class="val num" style="font-size:34px">${money(b)}</span>
+    ${p.cur && p.cur !== 'INR' && b ? `<span class="sub num">≈ ${fmoney(b / fxOf(p.cur), p.cur)}</span>` : ''}${ov > 0 ? `<span class="pill bad" style="align-self:flex-start">⏰ ${money(ov)} ${T('लेट','overdue')}</span>` : ''}</div>
+  ${wa ? `<a class="btn wa" href="${esc(wa)}" target="_blank" rel="noopener">💬 ${T('WhatsApp पर पैसे की याद दिलाओ','Send WhatsApp payment reminder')}</a>` : ''}
+  <div class="actions">
+    ${['sale','buy','payIn','payOut'].map(k => `<button class="act ${{sale:'acc',buy:'cargo',payIn:'good',payOut:'bad'}[k]}" data-act="wiz" data-type="${k}" data-party="${p.id}" data-say="${TYPE_NM(k)}"><span class="ic">${TYPE_IC[k]}</span>${TYPE_NM(k)}</button>`).join('')}
+  </div>` : ''}
+  ${ps.length ? `<h3>🚢 ${T('शिपमेंट','Shipments')}</h3>${ps.map(s => shipCard(s, true)).join('')}` : ''}
+  ${given.length ? `<h3>📤 ${T('इनको क्या-क्या माल दिया','Goods we gave them')}</h3>${rows(given)}` : ''}
+  ${got.length ? `<h3>📥 ${T('इनसे क्या-क्या माल लिया','Goods we got from them')}</h3>${rows(got)}` : ''}
+  ${seeMoney() ? `<h3>📒 ${T('हिसाब किताब','Ledger')}</h3>${txnList(tx, false)}` : ''}
+  ${isOwner() ? `<button class="btn ${armed === 'del-party' ? 'armed' : 'ghost'}" data-act="del-party" data-id="${p.id}">${armed === 'del-party' ? T('पक्का? फिर दबाओ','Sure? Press again') : '🗑️ ' + T('इन्हें मिटाओ','Delete')}</button>` : ''}`;
+};
+SH.ship = () => {
+  const s = ship(sheet.id); if (!s) return closeMissing();
+  const x = S.txns.find(t => t.id === s.txn), p = party(s.party), exps = S.expenses.filter(e => e.ship === s.id);
+  const rev = x?.amount || 0, cost = x ? sum(x.lines || [], lineCost) : 0, e = sum(exps, e => e.amount);
+  const msg = `Shipment update ${s.ref}: ${STAGES()[s.stage]}. ETA ${s.eta}${s.vessel ? ', vessel ' + s.vessel : ''}${s.container ? ', container ' + s.container : ''}${s.bl ? ', B/L ' + s.bl : ''}. — ${S.settings.company || ''}`;
+  const wa = waLink(p?.phone, msg);
+  return `<div class="sheet-hd"><h2>🚢 ${esc(s.ref)}</h2><button class="x" data-act="close">✕</button></div>
+  ${routeSVG(s)}${shipCard(s, false)}
+  <h3>📑 ${T('कागज़ात — जो तैयार है उस पर दबाओ','Documents — tap the ones that are ready')}</h3>
+  <div class="docchk">${DOCS.map(d => `<button class="${(s.docs || {})[d[0]] ? 'ok' : ''}" data-act="doc-tog" data-id="${s.id}" data-k="${d[0]}" data-say="${esc(d[2] + ' ' + ((s.docs || {})[d[0]] ? T('तैयार','ready') : T('बाकी','pending')))}"><span class="ic">${(s.docs || {})[d[0]] ? '✅' : d[1]}</span>${d[2]}</button>`).join('')}</div>
+  ${seeMoney() && s.dir === 'out' && x ? `<div class="panel" data-say="${esc(T('इस शिपमेंट का मुनाफ़ा','Profit on this shipment') + ' ' + sayMoney(rev - cost - e))}"><h3>😊 ${T('इस शिपमेंट का हिसाब','This shipment’s numbers')}</h3>
+    <div class="hbars">${[[T('बिक्री','Sale'), rev, 'good'], [T('माल की लागत','Cost of goods'), cost, 'cargo'], [T('खर्चे','Expenses'), e, 'warn']].map(r => `<div class="hb"><span class="nm">${r[0]}</span><span class="v num">${money(r[1])}</span><span class="track2"><i class="${r[2]}" style="width:${rev ? Math.min(100, r[1] / rev * 100) : 0}%"></i></span></div>`).join('')}</div>
+    <div class="row"><b>${T('मुनाफ़ा','Profit')}</b><span class="sp"></span><span class="amt num ${rev - cost - e >= 0 ? 'good' : 'bad'}">${smoney(rev - cost - e)}</span></div></div>` : ''}
+  ${seeMoney() ? `<h3>🧾 ${T('इस शिपमेंट के खर्चे','Expenses on this shipment')}</h3>
+  <div class="list">${exps.map(e => `<div class="li"><span class="ic">${EXP[e.cat]?.[0]}</span><div class="body"><div class="t1">${esc(expNm(e.cat))}</div><div class="t2">${fmtDate(e.d)}${e.note ? ' · ' + esc(e.note) : ''}</div></div><span class="amt num bad" style="font-size:18px">${money(e.amount)}</span></div>`).join('') || `<div class="empty">${T('कोई खर्चा नहीं','No expenses')}</div>`}</div>
+  <button class="btn" data-act="wiz" data-type="exp" data-ship="${s.id}">➕ ${T('खर्चा जोड़ो','Add expense')}</button>` : ''}
+  <div class="row">${x && seeMoney() ? `<button class="btn" data-act="open-inv" data-id="${x.id}">🧾 ${T('इनवॉइस','Invoice')}</button><button class="btn" data-act="open-inv" data-id="${x.id}" data-k="pl">📋 ${T('पैकिंग लिस्ट','Packing list')}</button>` : ''}${wa ? `<a class="btn wa" href="${esc(wa)}" target="_blank" rel="noopener">💬 ${T('ग्राहक को अपडेट भेजो','Update the party')}</a>` : ''}</div>
+  <h3>✏️ ${T('शिप की जानकारी','Shipping details')}</h3>
+  <form class="form" id="shipF"><div class="two">
+    <label>🛳️ ${T('जहाज़ का नाम','Vessel')}<input id="s_vessel" value="${esc(s.vessel || '')}"></label>
+    <label>📦 Container No.<input id="s_container" value="${esc(s.container || '')}"></label>
+    <label>🚢 B/L No.<input id="s_bl" value="${esc(s.bl || '')}"></label>
+    <label>📅 ${T('पहुँचने की तारीख','Arrival date')}<input id="s_eta" type="date" value="${esc(s.eta)}"></label>
+    <label>⚓ ${T('कहाँ से (Port of loading)','Port of loading')}<input id="s_pol" value="${esc(s.pol || '')}"></label>
+    <label>⚓ ${T('कहाँ तक (Port of discharge)','Port of discharge')}<input id="s_pod" value="${esc(s.pod || '')}"></label>
+  </div><button class="btn pri" type="submit">${T('पक्का करो ✅','Save ✅')}</button></form>`;
+};
+const closeMissing = () => { setTimeout(() => { sheet = null; render(); }, 0); return ''; };
+
+/* ----- invoice / packing list ----- */
+function docHTML(x, kind){
+  const p = party(x.party) || {}, s = x.ship ? ship(x.ship) : null, st = S.settings, cur = x.cur || 'INR';
+  const fx = x.fx || 1, rows = (x.lines || []).map((l, k) => { const i = item(l.item) || {name: '?', unit: ''}; const fr = l.frate ?? l.rate / fx; return {k: k + 1, i, l, fr, amt: fr * l.qty, pk: +i.pack ? Math.ceil(l.qty / i.pack) : '', net: i.unit === 'kg' ? l.qty : (+i.wt ? l.qty * i.wt : '')}; });
+  const total = sum(rows, r => r.amt), f = n => (CUR[cur] || '') + (+n).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const title = kind === 'pl' ? 'PACKING LIST' : kind === 'pro' ? 'PROFORMA INVOICE' : x.type === 'buy' ? 'PURCHASE BILL' : 'COMMERCIAL INVOICE';
+  const seller = x.type === 'buy' ? {name: p.name, addr: cname(p.country)} : {name: st.company || 'Your Company', addr: st.address || ''};
+  const buyer = x.type === 'buy' ? {name: st.company || 'Your Company', addr: st.address || ''} : {name: p.name, addr: [cname(p.country), p.phone].filter(Boolean).join(' · ')};
+  const table = kind === 'pl'
+    ? `<table><thead><tr><th>#</th><th>Description of goods</th><th>HS code</th><th class="r">Packages</th><th class="r">Quantity</th><th class="r">Net wt (kg)</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r.k}</td><td>${esc(r.i.name)}</td><td>${esc(r.i.hs || '')}</td><td class="r">${r.pk}</td><td class="r">${qtyFmt(r.l.qty)} ${esc(r.i.unit)}</td><td class="r">${r.net === '' ? '' : qtyFmt(r.net)}</td></tr>`).join('')}
+       <tr><th colspan="3">TOTAL</th><th class="r">${sum(rows, r => +r.pk || 0) || ''}</th><th></th><th class="r">${qtyFmt(sum(rows, r => +r.net || 0))}</th></tr></tbody></table>`
+    : `<table><thead><tr><th>#</th><th>Description of goods</th><th>HS code</th><th class="r">Quantity</th><th class="r">Rate (${cur})</th><th class="r">Amount (${cur})</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r.k}</td><td>${esc(r.i.name)}</td><td>${esc(r.i.hs || '')}</td><td class="r">${qtyFmt(r.l.qty)} ${esc(r.i.unit)}</td><td class="r">${f(r.fr)}</td><td class="r">${f(r.amt)}</td></tr>`).join('')}
+       <tr><th colspan="5" class="r">TOTAL ${esc(x.incoterm || '')}</th><th class="r">${f(total)}</th></tr>${cur !== 'INR' ? `<tr><td colspan="5" class="r">INR equivalent @ ${fx}</td><td class="r">₹ ${Math.round(x.amount).toLocaleString('en-IN')}</td></tr>` : ''}</tbody></table>`;
+  return `<div class="paper"><h1>${title}</h1>
+  <div class="meta"><div><b>${x.type === 'buy' ? 'Supplier' : 'Exporter'}</b><br>${esc(seller.name)}<br>${esc(seller.addr)}${x.type !== 'buy' && st.iec ? `<br>IEC: ${esc(st.iec)}` : ''}${x.type !== 'buy' && st.gstin ? `<br>GSTIN: ${esc(st.gstin)}` : ''}</div>
+  <div><b>${kind === 'pl' ? 'Packing list' : 'Invoice'} No.:</b> ${esc(x.inv || x.ref || x.id)}<br><b>Date:</b> ${esc(x.d)}<br>${kind !== 'pl' ? `<b>Payment terms:</b> ${+x.terms ? x.terms + ' days' : 'Advance'}${x.due ? ` (due ${esc(x.due)})` : ''}<br>` : ''}${x.incoterm ? `<b>Incoterm:</b> ${esc(x.incoterm)}` : ''}</div>
+  <div><b>${x.type === 'buy' ? 'Buyer' : 'Consignee'}</b><br>${esc(buyer.name)}<br>${esc(buyer.addr)}</div>
+  <div><b>Shipment</b><br>${s ? `Port of loading: ${esc(s.pol || '')}<br>Port of discharge: ${esc(s.pod || '')}<br>Vessel: ${esc(s.vessel || '—')} · Container: ${esc(s.container || '—')}<br>B/L: ${esc(s.bl || '—')} · Country of destination: ${esc((COUNTRIES.find(c => c[0] === s.country) || [])[2] || s.country)}` : 'Delivered locally'}</div></div>
+  ${table}
+  ${kind !== 'pl' && x.type !== 'buy' ? `<p style="margin-top:12px"><b>Bank details:</b> ${esc(st.bank || '—')}</p><p>Declaration: We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</p>` : ''}
+  <p style="text-align:right;margin-top:28px">For ${esc(seller.name)}<br><br>Authorised signatory</p></div>`;
+}
+SH.inv = () => {
+  const x = S.txns.find(t => t.id === sheet.id); if (!x) return closeMissing();
+  const kinds = x.type === 'sale' ? [['inv', '🧾 Invoice'], ['pro', '📝 Proforma'], ['pl', '📋 Packing list']] : [['inv', '🧾 Bill'], ['pl', '📋 Packing list']];
+  const p = party(x.party), s = C.inv[x.id] || {};
+  return `<div class="sheet-hd"><h2>🧾 ${esc(x.inv || T('बिल','Bill'))}</h2><button class="x" data-act="close">✕</button></div>
+  <div class="row" data-say="${esc((p?.name || '') + '. ' + sayMoney(x.amount) + '. ' + (s.status === 'paid' ? T('पूरा चुका','fully paid') : T('बाकी','open') + ' ' + sayMoney(s.open || 0)))}">${pic(p, 'sm')}<b style="flex:1">${esc(p?.name || '')}</b>${statusPill(x)}<span class="amt num">${money(x.amount)}</span></div>
+  ${s.paid > .5 && s.open > .5 ? `<div class="bar"><i style="width:${s.paid / x.amount * 100}%"></i></div><div class="muted num">${T('मिला','Paid')} ${money(s.paid)} · ${T('बाकी','Open')} ${money(s.open)}</div>` : ''}
+  <div class="seg">${kinds.map(([k, l]) => `<button class="${(sheet.kind || 'inv') === k ? 'on' : ''}" data-act="inv-kind" data-k="${k}">${l}</button>`).join('')}</div>
+  <div class="row"><button class="btn pri" data-act="inv-dl">⬇️ ${T('फ़ाइल डाउनलोड','Download file')}</button>${canPrint() ? `<button class="btn" data-act="inv-print">🖨️ ${T('प्रिंट','Print')}</button>` : ''}
+  ${(() => { const t = `${x.type === 'sale' ? 'Invoice' : 'Bill'} ${x.inv || ''} dated ${x.d}: ${linesTxt(x).replace(/[^\p{L}\p{N}\s,.×]/gu, '').trim()}. Total ${x.cur && x.cur !== 'INR' ? fmoney(x.famount, x.cur) : money(x.amount)}${x.due ? ', due ' + x.due : ''}. — ${S.settings.company || ''}`; const w = waLink(p?.phone, t); return w ? `<a class="btn wa" href="${esc(w)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''; })()}</div>
+  ${!S.settings.company ? `<div class="note">⚙️ ${T('बिल पर अपनी कंपनी का नाम, पता, IEC, बैंक डालने के लिए सेटिंग में जाओ।','Add your company name, address, IEC and bank in Settings to print them on documents.')}</div>` : ''}
+  ${docHTML(x, sheet.kind || 'inv')}`;
+};
+const canPrint = () => !window.claude;
+function fullDoc(x, kind){ return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(x.inv || 'document')}</title><style>body{font-family:Arial,Helvetica,sans-serif;margin:24px;color:#151515}.paper{font-size:13px;line-height:1.45}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:6px 8px;text-align:left;vertical-align:top}th{background:#eef0f1}.r{text-align:right}h1{font-size:20px;text-align:center;letter-spacing:2px}.meta{display:grid;grid-template-columns:1fr 1fr;border:1px solid #999;margin-bottom:10px}.meta>div{padding:8px;border:1px solid #999}</style></head><body>${docHTML(x, kind)}</body></html>`; }
+
+/* ----- numpad ----- */
+function numpad(unit, hint, dec){
+  return `<div class="npd"><div class="screen num" data-say="${esc((W.buf || '0') + ' ' + (unit || ''))}">${W.buf ? (W.buf.endsWith('.') ? W.buf : qtyFmt(+W.buf)) : '0'} <small>${esc(unit || '')}</small></div>
+  ${hint ? `<div class="hint">${hint}</div>` : ''}
+  <div class="keys">${['1','2','3','4','5','6','7','8','9', dec ? '.' : '00','0','⌫'].map(k => `<button type="button" data-act="np" data-k="${k}" ${k === '⌫' ? 'class="k-del" aria-label="delete"' : ''} data-say="${k === '⌫' || k === '.' ? '' : k}">${k}</button>`).join('')}</div></div>`;
+}
+function npKey(k){ if (k === '⌫') W.buf = W.buf.slice(0, -1); else if (k === '.'){ if (!W.buf.includes('.')) W.buf = (W.buf || '0') + '.'; } else if (W.buf.length < 11) W.buf = (W.buf + k).replace(/^0+(?=\d)/, ''); }
+
+/* ================= ENTRY WIZARD ================= */
+const STEPS = {sale:['type','party','item','qty','rate','cart','terms','ship','confirm'], buy:['type','party','item','qty','rate','cart','terms','ship','confirm'], payIn:['type','party','amount','confirm'], payOut:['type','party','amount','confirm'], exp:['type','expcat','amount','link','confirm']};
+function startWiz(type, pid, extra){
+  W = Object.assign({type: type || null, party: pid || null, lines: [], item: null, qty: 0, buf: '', cur: 'INR', terms: 30, incoterm: 'FOB', ship: null, country: null, eta: 20, mode: 'bank', amount: 0, expcat: null, shipLink: null, k: 0}, extra || {});
+  if (W.type){ W.k = 1; if (pid) W.k = 2; if (W.type === 'exp' && W.shipLink) W.k = 1; }
+  if (pid){ const p = party(pid); W.cur = p?.cur || 'INR'; W.terms = +p?.terms || 30; }
+  sheet = {k: 'wiz'}; onStep();
+}
+const stepName = () => W && W.type ? STEPS[W.type][W.k] : 'type';
+function onStep(){
+  const s = stepName(), i = item(W.item);
+  if (s === 'qty') W.buf = W.qty ? String(W.qty) : '';
+  if (s === 'rate'){ const base = i ? (W.type === 'sale' ? i.sell : i.buy) : 0; W.buf = base ? String(+(base / fxOf(W.cur)).toFixed(W.cur === 'INR' ? 0 : 2)) : ''; }
+  if (s === 'amount'){
+    if (W.type === 'exp') W.buf = W.amount ? String(W.amount) : '';
+    else { const b = C.bal[W.party] || 0, due = (W.type === 'payIn' && b > 0) || (W.type === 'payOut' && b < 0) ? Math.abs(b) : 0; W.buf = W.amount ? String(W.famount || W.amount) : due ? String(+(due / fxOf(W.cur)).toFixed(W.cur === 'INR' ? 0 : 2)) : ''; }
+  }
+  if (s === 'ship' && !W.country) W.country = party(W.party)?.country || 'AE';
+  const q = {type: T('क्या हुआ?','What happened?'), party: T('किसके साथ?','With whom?'), item: T('कौन सा माल?','Which item?'), qty: T('कितना माल?','How much?'), rate: T('एक का भाव कितना?','Price for one?'), cart: T('और माल जोड़ना है?','Add more goods?'), terms: T('पैसा कब मिलेगा?','When is the payment due?'), amount: T('कितने पैसे?','How much money?'), ship: W.type === 'sale' ? T('माल कैसे गया?','How did the goods go?') : T('माल आ गया या रास्ते में है?','Arrived or on the way?'), expcat: T('किस चीज़ का खर्चा?','What was the expense for?'), link: T('किस शिपमेंट का खर्चा?','Which shipment is it for?'), confirm: T('एक बार देख लो','Check once')}[s];
+  setTimeout(() => speak(q), 80);
+}
+function curChips(){ return `<div class="seg">${Object.keys(CUR).map(c => `<button type="button" class="${W.cur === c ? 'on' : ''}" data-act="w-cur" data-v="${c}" data-say="${hi() ? CUR_HI[c] : c}">${c === 'INR' ? '₹' : c}</button>`).join('')}</div>${W.cur !== 'INR' ? `<div class="muted" style="font-size:14px">1 ${W.cur} = ₹ ${fxOf(W.cur)} · ${T('रेट ⚙️ सेटिंग में बदलो','change rates in ⚙️ Settings')}</div>` : ''}`; }
+SH.wiz = () => {
+  const s = stepName(), steps = W.type ? STEPS[W.type] : STEPS.sale;
+  const title = W.type ? `${TYPE_IC[W.type]} ${TYPE_NM(W.type)}` : T('नई एंट्री','New entry');
+  let body = '', canNext = false, hideNext = false;
+  const lineTot = sum(W.lines, l => l.qty * l.rate);
+  if (s === 'type'){
+    body = `<h3>${T('क्या हुआ?','What happened?')}</h3><div class="bigchoice">${['sale','buy','payIn','payOut','exp'].map(k => `<button class="act ${{sale:'acc',buy:'cargo',payIn:'good',payOut:'bad',exp:'info'}[k]}" style="min-height:140px" data-act="w-type" data-v="${k}" data-say="${esc(TYPE_NM(k))}"><span class="ic" style="font-size:52px">${TYPE_IC[k]}</span>${TYPE_NM(k)}<small>${TYPE_SUB(k)}</small></button>`).join('')}</div>`; hideNext = true;
+  } else if (s === 'party'){
+    const list = S.parties.filter(p => W.type === 'sale' || W.type === 'payIn' ? p.kind !== 'supplier' : p.kind !== 'customer');
+    body = `<h3>${T('किसके साथ?','With whom?')}</h3><div class="pick">${list.map(p => { const b = C.bal[p.id] || 0; return `<button class="pk ${W.party === p.id ? 'on' : ''}" data-act="w-party" data-v="${p.id}" data-say="${esc(p.name)}">${pic(p)}${esc(p.name)}<small>${flag(p.country)} ${b ? `<span style="color:var(--${b > 0 ? 'good' : 'bad'})">${money(b)}</span>` : ''}</small></button>`; }).join('')}
+      <button class="pk" data-act="party-form" data-ret="1"><span class="ic">➕</span>${T('नया','New')}</button></div>`; hideNext = true;
+  } else if (s === 'item'){
+    body = `<h3>${T('कौन सा माल?','Which item?')}</h3><div class="pick">${S.items.map(i => `<button class="pk ${W.item === i.id ? 'on' : ''}" data-act="w-item" data-v="${i.id}" data-say="${esc(i.name + ', ' + qtyFmt(stockOf(i.id)) + ' ' + i.unit)}">${pic(i)}${esc(i.name)}<small class="num">${qtyFmt(stockOf(i.id))} ${esc(i.unit)}</small></button>`).join('')}
+      <button class="pk" data-act="item-form" data-ret="1"><span class="ic">➕</span>${T('नया','New')}</button></div>`; hideNext = true;
+  } else if (s === 'qty'){
+    const i = item(W.item), already = sum(W.lines.filter(l => l.item === i.id), l => l.qty), avail = stockOf(i.id) - already, over = W.type === 'sale' && +W.buf > avail;
+    body = `<div class="row">${pic(i, 'sm')}<h3 style="flex:1">${T('कितना माल?','How much?')}</h3></div>${numpad(i.unit, `${T('गोदाम में','In godown')}: <b class="num">${qtyFmt(avail)} ${esc(i.unit)}</b>${+i.pack && +W.buf ? ` · 📦 ${Math.ceil(+W.buf / i.pack)} ${T('बोरी / पेटी','packages')}` : ''}`, true)}
+      ${over ? `<div class="alert bad"><span class="ic">🚫</span><b>${T('इतना माल गोदाम में नहीं है','Not that much in the godown')}</b></div>` : ''}`;
+    canNext = +W.buf > 0 && !over;
+  } else if (s === 'rate'){
+    const i = item(W.item), base = (+W.buf || 0) * fxOf(W.cur);
+    body = `<div class="row">${pic(i, 'sm')}<h3 style="flex:1">${T('एक का भाव कितना?','Price for one?')}</h3></div>${curChips()}${numpad(CUR[W.cur].trim() + ' / ' + i.unit, `${T('कुल','Total')}: <b class="num">${fmoney(W.qty * (+W.buf || 0), W.cur)}</b>${W.cur !== 'INR' ? ` = ${money(W.qty * base)}` : ''}${W.type === 'sale' && base && base < i.buy ? `<br><span style="color:var(--bad);font-weight:700">⚠️ ${T('खरीद के भाव से कम!','Below buying price!')} (${money(i.buy)})</span>` : ''}`, true)}`;
+    canNext = +W.buf > 0;
+  } else if (s === 'cart'){
+    body = `<h3>${T('इस बिल में','On this bill')}</h3><div class="list">${W.lines.map((l, k) => { const i = item(l.item); return `<div class="li">${pic(i, 'sm')}<div class="body"><div class="t1">${esc(i?.name)}</div><div class="t2 num">${qtyFmt(l.qty)} ${esc(i?.unit)} × ${fmoney(l.frate, W.cur)}</div></div><b class="num">${fmoney(l.qty * l.frate, W.cur)}</b><button class="btn sm ghost" data-act="w-rmline" data-k="${k}" aria-label="remove">✕</button></div>`; }).join('')}</div>
+      <div class="row"><b>${T('कुल','Total')}</b><span class="sp"></span><span class="amt num">${fmoney(sum(W.lines, l => l.qty * l.frate), W.cur)}</span></div>
+      <button class="act cargo" data-act="w-more" data-say="${T('और माल जोड़ो','Add more goods')}"><span class="ic">➕</span>${T('और माल जोड़ो','Add more goods')}</button>`;
+    canNext = W.lines.length > 0;
+  } else if (s === 'terms'){
+    body = `<h3>💰 ${T('पैसा कब मिलेगा / देना है?','When is payment due?')}</h3><div class="pick sm">${[[0, '⚡', T('पहले (एडवांस)','Advance')], [15, '📅', '15 ' + T('दिन','days')], [30, '📅', '30 ' + T('दिन','days')], [60, '📅', '60 ' + T('दिन','days')], [90, '📅', '90 ' + T('दिन','days')]].map(([d, ic, l]) => `<button class="pk ${W.terms === d ? 'on' : ''}" data-act="w-terms" data-v="${d}" data-say="${esc(l)}"><span class="ic">${ic}</span>${l}</button>`).join('')}</div>
+      ${W.type === 'sale' ? `<h3>📜 ${T('सौदे की शर्त (Incoterm)','Incoterm')}</h3><div class="pick sm">${[['EXW', '🏭', T('हमारे गोदाम पर','At our godown')], ['FOB', '⚓', T('जहाज़ पर चढ़ाने तक','Loaded on ship')], ['CFR', '🚢', T('भाड़ा हमारा','We pay freight')], ['CIF', '🛡️', T('भाड़ा + बीमा हमारा','Freight + insurance')]].map(([k, ic, l]) => `<button class="pk ${W.incoterm === k ? 'on' : ''}" data-act="w-inco" data-v="${k}" data-say="${esc(k + ', ' + l)}"><span class="ic">${ic}</span>${k}<small>${l}</small></button>`).join('')}</div>` : ''}`;
+    canNext = true;
+  } else if (s === 'amount'){
+    if (W.type === 'exp'){
+      body = `<div class="row"><span style="font-size:36px">${EXP[W.expcat][0]}</span><h3 style="flex:1">${esc(expNm(W.expcat))} — ${T('कितने पैसे?','How much?')}</h3></div>${numpad('₹', '', false)}`;
+    } else {
+      const b = C.bal[W.party] || 0, p = party(W.party);
+      body = `<div class="row">${pic(p, 'sm')}<h3 style="flex:1">${T('कितने पैसे?','How much money?')}</h3></div>${curChips()}${numpad(CUR[W.cur].trim(), (b ? `${b > 0 ? T('ये हमें देंगे','They owe us') : T('हमें देना है','We owe them')}: <b class="num">${money(b)}</b>` : T('हिसाब बराबर','All settled')) + (W.cur !== 'INR' && +W.buf ? ` · = ${money(+W.buf * fxOf(W.cur))}` : ''), true)}
+      <h3>${T('कैसे?','How?')}</h3><div class="seg">${Object.entries(MODES).map(([k, m]) => `<button class="${W.mode === k ? 'on' : ''}" data-act="w-mode" data-v="${k}" data-say="${esc(hi() ? m[1] : m[2])}">${m[0]} ${hi() ? m[1] : m[2]}</button>`).join('')}</div>`;
+    }
+    canNext = +W.buf > 0;
+  } else if (s === 'expcat'){
+    body = `<h3>${T('किस चीज़ का खर्चा?','What was the expense for?')}</h3><div class="pick sm">${Object.keys(EXP).map(k => `<button class="pk ${W.expcat === k ? 'on' : ''}" data-act="w-expcat" data-v="${k}" data-say="${esc(expNm(k))}"><span class="ic">${EXP[k][0]}</span>${esc(expNm(k))}</button>`).join('')}</div>`; hideNext = true;
+  } else if (s === 'link'){
+    const ships = S.ships.filter(x => x.stage < 4 || daysFrom(x.eta) > -45);
+    body = `<h3>${T('किस शिपमेंट का खर्चा? (ज़रूरी नहीं)','Which shipment is it for? (optional)')}</h3><div class="pick">${[`<button class="pk ${!W.shipLink ? 'on' : ''}" data-act="w-link" data-v="" data-say="${T('कोई नहीं','None')}"><span class="ic">🏢</span>${T('ऑफ़िस / कोई नहीं','Office / none')}</button>`].concat(ships.map(x => `<button class="pk ${W.shipLink === x.id ? 'on' : ''}" data-act="w-link" data-v="${x.id}" data-say="${esc(cname(x.country) + ' ' + x.ref)}"><span class="ic">${flag(x.country)}</span>${esc(x.ref)}<small>${esc(party(x.party)?.name || '')}</small></button>`)).join('')}</div>`;
+    canNext = true;
+  } else if (s === 'ship'){
+    const sale = W.type === 'sale';
+    body = `<div class="bigchoice">
+      <button class="act ${W.ship === true ? 'cargo' : ''}" style="min-height:120px" data-act="w-ship" data-v="1" data-say="${sale ? T('शिप से भेजा','Sent by ship') : T('रास्ते में है','On the way')}"><span class="ic">🚢</span>${sale ? T('शिप / ट्रक से भेजा','Sent by ship / truck') : T('रास्ते में है','On the way')}</button>
+      <button class="act ${W.ship === false ? 'good' : ''}" style="min-height:120px" data-act="w-ship" data-v="0" data-say="${sale ? T('यहीं दे दिया','Handed over here') : T('माल आ गया','Goods arrived')}"><span class="ic">${sale ? '🤝' : '🏬'}</span>${sale ? T('यहीं दे दिया','Handed over here') : T('माल आ गया','Goods arrived')}</button></div>
+      ${W.ship ? `<h3>${sale ? T('किस देश जा रहा है?','Going to which country?') : T('किस देश से आ रहा है?','Coming from which country?')}</h3><div class="pick sm">${COUNTRIES.map(c => `<button class="pk ${W.country === c[0] ? 'on' : ''}" data-act="w-country" data-v="${c[0]}" data-say="${esc(hi() ? c[1] : c[2])}"><span class="ic">${flag(c[0])}</span><small style="color:inherit;font-weight:700">${esc(hi() ? c[1] : c[2])}</small></button>`).join('')}</div>
+      <h3>${T('कितने दिन में पहुँचेगा?','Reaches in how many days?')}</h3><div class="seg">${[5, 10, 20, 30, 45, 60].map(d => `<button class="${W.eta === d ? 'on' : ''}" data-act="w-eta" data-v="${d}" data-say="${d} ${T('दिन','days')}">📅 ${d}</button>`).join('')}</div>` : ''}`;
+    canNext = W.ship === false || (W.ship === true && !!W.country);
+  } else if (s === 'confirm'){
+    body = confirmBody(); canNext = true;
+  }
+  const bar = W.k > 0 ? `<div class="bottom-bar"><button class="btn" data-act="w-back" data-say="${T('पीछे','Back')}">⬅️ ${T('पीछे','Back')}</button><span class="sp"></span>
+    ${hideNext ? '' : s === 'confirm' ? `<button class="btn good" style="flex:1;min-height:62px;font-size:21px" data-act="w-save" data-say="${T('पक्का करो','Confirm')}">✅ ${T('पक्का करो','Confirm')}</button>` : `<button class="btn pri" style="flex:1" data-act="w-next" ${canNext ? '' : 'disabled'} data-say="${T('आगे','Next')}">${T('आगे','Next')} ➡️</button>`}</div>` : '';
+  return `<div class="sheet-hd"><h2>${title}</h2><button class="x" data-act="close" aria-label="close">✕</button></div>
+  <div class="steps">${steps.map((_, k) => `<i class="${k <= W.k ? 'on' : ''}"></i>`).join('')}</div>${body}${bar}`;
+};
+function confirmBody(){
+  const p = party(W.party), goods = W.type === 'sale' || W.type === 'buy';
+  if (W.type === 'exp'){
+    const sh = W.shipLink ? ship(W.shipLink) : null, said = `${expNm(W.expcat)}. ${sayMoney(W.amount)}. ${sh ? sh.ref : ''}`; setTimeout(() => speak(said), 600);
+    return `<div class="eq" data-say="${esc(said)}"><span class="col"><span style="font-size:48px">${EXP[W.expcat][0]}</span>${esc(expNm(W.expcat))}</span>${sh ? `<span class="op">➡️</span><span class="col"><span style="font-size:44px">${flag(sh.country)}</span>${esc(sh.ref)}</span>` : ''}</div>
+    <div class="tile bad" style="min-height:0;align-items:center;text-align:center"><span class="lbl">${T('कुल','Total')}</span><span class="val num" style="font-size:38px">${money(W.amount)}</span></div>
+    <form class="form"><label>${T('नोट (ज़रूरी नहीं)','Note (optional)')}<input id="w_note" value="${esc(W.note || '')}"></label></form>`;
+  }
+  const total = goods ? sum(W.lines, l => l.qty * l.rate) : W.amount, ftotal = goods ? sum(W.lines, l => l.qty * l.frate) : W.famount;
+  const said = `${TYPE_NM(W.type)}. ${p.name}. ${goods ? W.lines.map(l => `${item(l.item)?.name} ${l.qty} ${item(l.item)?.unit}`).join(', ') + '. ' : ''}${T('कुल','Total')} ${sayMoney(ftotal, W.cur)}. ${W.ship ? cname(W.country) + ', ' + W.eta + ' ' + T('दिन','days') : ''}`;
+  setTimeout(() => speak(said), 600);
+  const arrow = W.type === 'sale' || W.type === 'payOut' ? '➡️' : '⬅️';
+  return `<div class="eq" data-say="${esc(said)}"><span class="col"><span style="font-size:44px">🏠</span>${T('हम','Us')}</span><span class="op">${arrow}</span>
+    ${goods ? W.lines.map(l => { const i = item(l.item); return `<span class="col">${pic(i)}<span class="num">${qtyFmt(l.qty)} ${esc(i.unit)}</span></span>`; }).join('') : `<span class="col"><span style="font-size:44px">${TYPE_IC[W.type]}</span>${MODES[W.mode][0]} ${hi() ? MODES[W.mode][1] : MODES[W.mode][2]}</span>`}<span class="op">${arrow}</span>
+    <span class="col">${pic(p)}${esc(p.name)}</span></div>
+  <div class="tile ${W.type === 'sale' || W.type === 'payOut' ? 'good' : 'bad'}" style="min-height:0;align-items:center;text-align:center"><span class="lbl">${T('कुल','Total')}</span><span class="val num" style="font-size:36px">${fmoney(ftotal, W.cur)}</span>${W.cur !== 'INR' ? `<span class="sub num">= ${money(total)} @ ${fxOf(W.cur)}</span>` : ''}</div>
+  ${goods ? `<div class="row" style="gap:6px;justify-content:center"><span class="pill">⏳ ${W.terms ? W.terms + ' ' + T('दिन में पैसा','days to pay') : T('एडवांस','Advance')}</span>${W.type === 'sale' ? `<span class="pill">📜 ${W.incoterm}</span>` : ''}</div>` : ''}
+  ${W.ship ? `<div class="alert"><span class="ic">${flag(W.country)}</span><span><b>🚢 ${esc(cname(W.country))}</b><span class="muted">📅 ${W.eta} ${T('दिन','days')} · ${fmtDate(addDays(today(), W.eta))}</span></span></div>` : ''}`;
+}
+function wizNext(){
+  const s = stepName();
+  if (s === 'qty') W.qty = +W.buf;
+  if (s === 'rate'){ const fr = +W.buf, i = item(W.item); W.lines.push({item: W.item, qty: W.qty, frate: fr, rate: +(fr * fxOf(W.cur)).toFixed(4), cost: +i.buy || 0}); W.item = null; W.qty = 0; }
+  if (s === 'amount'){ if (W.type === 'exp') W.amount = +W.buf; else { W.famount = +W.buf; W.amount = +(W.famount * fxOf(W.cur)).toFixed(2); } }
+  W.k++; onStep();
+}
+function nextNo(prefix, list, field){ const y = today().slice(0, 4), re = new RegExp('^' + prefix + '-' + y + '-(\\d+)$'); let mx = 0; for (const x of list){ const m = re.exec(x[field] || ''); if (m) mx = Math.max(mx, +m[1]); } return `${prefix}-${y}-${String(mx + 1).padStart(4, '0')}`; }
+function wizSave(){
+  const d = today(), id = uid(), tp = W.type;
+  if (tp === 'exp'){
+    const note = document.getElementById('w_note')?.value?.trim() || '';
+    put('expenses', {id, d, cat: W.expcat, amount: W.amount, ship: W.shipLink || null, note});
+    logIt('🧾', `${expNm(W.expcat)} ${money(W.amount)}${W.shipLink ? ' · ' + (ship(W.shipLink)?.ref || '') : ''}`);
+  } else if (tp === 'sale' || tp === 'buy'){
+    const amount = +sum(W.lines, l => l.qty * l.rate).toFixed(2), famount = +sum(W.lines, l => l.qty * l.frate).toFixed(2);
+    const x = {id, d, type: tp, party: W.party, lines: W.lines, amount, famount, cur: W.cur, fx: fxOf(W.cur), terms: W.terms, due: addDays(d, W.terms), incoterm: tp === 'sale' ? W.incoterm : null};
+    if (tp === 'sale') x.inv = nextNo(S.settings.invPrefix || 'INV', S.txns.filter(t => t.type === 'sale'), 'inv');
+    else x.inv = nextNo('PB', S.txns.filter(t => t.type === 'buy'), 'inv');
+    if (W.ship){
+      const sid = uid(), out = tp === 'sale';
+      put('ships', {id: sid, dir: out ? 'out' : 'in', party: W.party, country: W.country, lines: W.lines.map(l => ({item: l.item, qty: l.qty})), stage: 0, created: d, eta: addDays(d, W.eta), ref: nextNo(out ? 'EX' : 'IM', S.ships, 'ref'), pol: out ? 'Nhava Sheva' : cport(W.country), pod: out ? cport(W.country) : 'Nhava Sheva', docs: {inv: out}, txn: id});
+      x.ship = sid;
+    }
+    put('txns', x);
+    logIt(TYPE_IC[tp], `${TYPE_NM(tp)}: ${party(W.party)?.name} · ${linesTxt(x)} · ${money(amount)} · ${x.inv}`);
+  } else {
+    put('txns', {id, d, type: tp, party: W.party, amount: W.amount, famount: W.famount, cur: W.cur, fx: fxOf(W.cur), mode: W.mode});
+    logIt(TYPE_IC[tp], `${TYPE_NM(tp)}: ${party(W.party)?.name} · ${fmoney(W.famount, W.cur)}`);
+  }
+  sheet = null; W = null; toast('✅ ' + T('हो गया!','Done!')); speak(T('हो गया','Done') + '. ' + TYPE_NM(tp));
+}
+
+/* ----- small numpad sheets ----- */
+SH.adj = () => {
+  const i = item(sheet.id), st = stockOf(i.id);
+  return `<div class="sheet-hd"><h2>${sheet.m === 'in' ? '➕ ' + T('माल आया','Stock in') : '➖ ' + T('माल गया','Stock out')}</h2><button class="x" data-act="close">✕</button></div>
+  <div class="row">${pic(i, 'sm')}<b>${esc(i.name)}</b></div>${numpad(i.unit, `${T('गोदाम में','In godown')}: <b class="num">${qtyFmt(st)} ${esc(i.unit)}</b>`, true)}
+  <div class="seg">${[['count', '🔢', T('गिनती ठीक की','Count correction')], ['damage', '💥', T('खराब / टूटा','Damaged')], ['sample', '🎁', T('नमूना दिया','Sample')]].map(([k, ic, l]) => `<button class="${(sheet.why || 'count') === k ? 'on' : ''}" data-act="adj-why" data-v="${k}" data-say="${esc(l)}">${ic} ${l}</button>`).join('')}</div>
+  <button class="btn ${sheet.m === 'in' ? 'good' : 'bad'} wide" data-act="adj-save" ${+W.buf > 0 && (sheet.m === 'in' || +W.buf <= st) ? '' : 'disabled'}>✅ ${T('पक्का करो','Confirm')}</button>`;
+};
+SH.price = () => {
+  const i = item(sheet.id);
+  return `<div class="sheet-hd"><h2>🏷️ ${T('भाव बदलो','Change price')}</h2><button class="x" data-act="close">✕</button></div>
+  <div class="row">${pic(i, 'sm')}<b>${esc(i.name)}</b></div>
+  <div class="seg"><button class="${sheet.f === 'sell' ? 'on' : ''}" data-act="price-f" data-f="sell">🏷️ ${T('बेचने का','Sell')}: ${money(i.sell)}</button><button class="${sheet.f === 'buy' ? 'on' : ''}" data-act="price-f" data-f="buy">🛒 ${T('खरीद का','Buy')}: ${money(i.buy)}</button></div>
+  ${numpad('₹ / ' + i.unit, `${T('नया भाव','New price')}${+W.buf ? ` · ≈ $${(+W.buf / fxOf('USD')).toFixed(2)}` : ''}`, true)}
+  <button class="btn good wide" data-act="price-save" ${+W.buf > 0 ? '' : 'disabled'}>✅ ${T('पक्का करो','Confirm')}</button>`;
+};
+
+/* ----- forms ----- */
+SH.itemForm = () => { const o = sheet.id ? item(sheet.id) || {} : {}; return `<div class="sheet-hd"><h2>${sheet.id ? '✏️ ' + esc(o.name) : '➕ ' + T('नया माल','New item')}</h2><button class="x" data-act="close">✕</button></div>
+  <form class="form" id="itemF">
+    <div><b>${T('तस्वीर चुनो','Choose a picture')}</b><div class="iconpick" style="margin-top:6px">${ITEM_ICONS.map(ic => `<button type="button" class="${sheet.icon === ic ? 'on' : ''}" data-act="f-icon" data-v="${ic}">${ic}</button>`).join('')}</div></div>
+    <label class="btn" style="flex-direction:row;cursor:pointer">${sheet.photo ? `<img src="${esc(sheet.photo)}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:cover">` : ''} 📷 ${T('फोटो लगाओ','Add photo')}<input type="file" accept="image/*" id="photoIn" hidden></label>
+    <div class="two"><label>${T('नाम','Name')}<input id="f_name" required value="${esc(o.name || '')}" placeholder="Basmati Rice"></label>
+    <label>🗣️ ${T('बोलने वाला नाम (हिंदी)','Spoken name (Hindi)')}<input id="f_alias" value="${esc(o.alias || '')}" placeholder="बासमती चावल"></label></div>
+    <div class="two"><label>${T('इकाई','Unit')}<input id="f_unit" value="${esc(o.unit || 'kg')}" required></label>
+    ${sheet.id ? '' : `<label>${T('अभी कितना माल है','Current stock')}<input id="f_open" type="number" inputmode="decimal" min="0" step="any" value="0"></label>`}
+    <label>🛒 ${T('खरीद का भाव ₹','Buying price ₹')}<input id="f_buy" type="number" inputmode="decimal" min="0" step="any" required value="${o.buy ?? ''}"></label>
+    <label>🏷️ ${T('बेचने का भाव ₹','Selling price ₹')}<input id="f_sell" type="number" inputmode="decimal" min="0" step="any" required value="${o.sell ?? ''}"></label>
+    <label>⚠️ ${T('कम से कम माल','Minimum stock')}<input id="f_min" type="number" inputmode="decimal" min="0" step="any" value="${o.min ?? 100}"></label>
+    <label>📦 ${T('एक बोरी / पेटी में कितना','Units per package')}<input id="f_pack" type="number" inputmode="decimal" min="0" step="any" value="${o.pack ?? ''}"></label>
+    <label>🔢 HS code<input id="f_hs" value="${esc(o.hs || '')}" placeholder="1006.30"></label>
+    <label>⚖️ ${T('एक का वज़न (किलो)','Weight per unit (kg)')}<input id="f_wt" type="number" inputmode="decimal" min="0" step="any" value="${o.wt ?? ''}"></label></div>
+    <button class="btn good wide" type="submit">✅ ${T('पक्का करो','Save')}</button></form>`; };
+SH.partyForm = () => { const o = sheet.id ? party(sheet.id) || {} : {}; return `<div class="sheet-hd"><h2>${sheet.id ? '✏️ ' + esc(o.name) : '➕ ' + T('नया आदमी / कंपनी','New person / company')}</h2><button class="x" data-act="close">✕</button></div>
+  <form class="form" id="partyF">
+    <div><b>${T('ये कौन है?','Who is this?')}</b><div class="bigchoice" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:6px">${[['customer', '🛍️', T('खरीदार','Buyer')], ['supplier', '🏭', T('सप्लायर','Supplier')], ['both', '🔁', T('दोनों','Both')]].map(([k, ic, l]) => `<button type="button" class="pk ${sheet.kind === k ? 'on' : ''}" data-act="f-kind" data-v="${k}" data-say="${esc(l)}"><span class="ic">${ic}</span>${l}</button>`).join('')}</div></div>
+    <div><b>${T('तस्वीर चुनो','Choose a picture')}</b><div class="iconpick" style="margin-top:6px">${PARTY_ICONS.map(ic => `<button type="button" class="${sheet.icon === ic ? 'on' : ''}" data-act="f-icon" data-v="${ic}">${ic}</button>`).join('')}</div></div>
+    <label class="btn" style="flex-direction:row;cursor:pointer">${sheet.photo ? `<img src="${esc(sheet.photo)}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:cover">` : ''} 📷 ${T('फोटो लगाओ','Add photo')}<input type="file" accept="image/*" id="photoIn" hidden></label>
+    <div class="two"><label>${T('नाम','Name')}<input id="f_name" required value="${esc(o.name || '')}"></label>
+    <label>🗣️ ${T('बोलने वाला नाम (हिंदी)','Spoken name (Hindi)')}<input id="f_alias" value="${esc(o.alias || '')}" placeholder="अल नूर"></label>
+    <label>📞 ${T('फ़ोन (WhatsApp)','Phone (WhatsApp)')}<input id="f_phone" type="tel" inputmode="tel" value="${esc(o.phone || '')}" placeholder="+971 50 123 4567"></label>
+    <label>🌍 ${T('देश','Country')}<select id="f_country">${COUNTRIES.map(c => `<option value="${c[0]}" ${(o.country || 'IN') === c[0] ? 'selected' : ''}>${flag(c[0])} ${esc(hi() ? c[1] : c[2])}</option>`).join('')}</select></label>
+    <label>💱 ${T('पैसे की करेंसी','Currency')}<select id="f_cur">${Object.keys(CUR).map(c => `<option ${(o.cur || 'INR') === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+    <label>⏳ ${T('कितने दिन का उधार','Credit days')}<input id="f_terms" type="number" min="0" value="${o.terms ?? 30}"></label>
+    <label>🚧 ${T('उधार की सीमा ₹','Credit limit ₹')}<input id="f_limit" type="number" min="0" step="any" value="${o.limit ?? ''}"></label></div>
+    <button class="btn good wide" type="submit">✅ ${T('पक्का करो','Save')}</button></form>`; };
+
+/* ----- settings ----- */
+SH.settings = () => { const st = S.settings; return `<div class="sheet-hd"><h2>⚙️ ${T('सेटिंग','Settings')}</h2><button class="x" data-act="close">✕</button></div>
+  <div class="note ${mode === 'cloud' ? 'info' : ''}">${mode === 'cloud' ? '👥 ' + T('ये डेटा पूरी टीम के साथ ऑनलाइन शेयर है। जिन्हें आपने ये पेज शेयर किया है वो सब देख और लिख सकते हैं।','This data is shared online with your team. Everyone you share this page with can see and edit it.') : '💻 ' + T('ये डेटा सिर्फ़ इसी कंप्यूटर / ब्राउज़र में है। बैकअप ज़रूर लेते रहो।','This data lives only in this computer / browser. Take backups regularly.')}</div>
+  ${isOwner() ? `<form class="form" id="setF">
+    <h3>🏢 ${T('कंपनी (बिल पर छपेगा)','Company (printed on documents)')}</h3>
+    <div class="two"><label>${T('कंपनी का नाम','Company name')}<input id="s_co" value="${esc(st.company)}"></label><label>${T('पता','Address')}<input id="s_addr" value="${esc(st.address)}"></label>
+    <label>IEC<input id="s_iec" value="${esc(st.iec)}"></label><label>GSTIN<input id="s_gst" value="${esc(st.gstin)}"></label>
+    <label>${T('बैंक डिटेल','Bank details')}<input id="s_bank" value="${esc(st.bank)}" placeholder="Bank, A/c, IFSC, SWIFT"></label><label>${T('बिल नंबर की शुरुआत','Invoice prefix')}<input id="s_pref" value="${esc(st.invPrefix || 'INV')}"></label></div>
+    <h3>💱 ${T('करेंसी रेट (1 = कितने ₹)','Exchange rates (1 = how many ₹)')}</h3>
+    <div class="two">${Object.keys(st.fx).map(c => `<label>${c}<input id="fx_${c}" type="number" step="any" min="0" value="${st.fx[c]}"></label>`).join('')}</div>
+    <h3>🏛️ ${T('सरकारी छूट %','Export incentives %')}</h3>
+    <div class="two"><label>RoDTEP %<input id="s_rod" type="number" step="any" min="0" value="${st.rodtep}"></label><label>Drawback %<input id="s_dbk" type="number" step="any" min="0" value="${st.drawback}"></label></div>
+    <h3>🔐 ${T('PIN (खाली = ताला नहीं)','PINs (empty = no lock)')}</h3>
+    <div class="two">${Object.keys(ROLES).map(r => `<label>${ROLES[r][0]} ${roleNm(r)}<input id="pin_${r}" inputmode="numeric" maxlength="6" pattern="[0-9]*" value="${esc(st.pins[r] || '')}"></label>`).join('')}</div>
+    <div class="muted" style="font-size:14px">${T('👷 कारीगर को पैसे नहीं दिखते — सिर्फ़ माल और शिपमेंट। 🧮 मुनीम सब देखता है, पर मिटा नहीं सकता।','👷 Worker sees no money — only stock and shipments. 🧮 Accountant sees everything but cannot delete.')}${mode === 'cloud' ? ' ' + T('PIN दुकान में रोल बदलने के लिए है, पक्की सुरक्षा नहीं।','PINs switch roles on a shared device; they are not strong security.') : ''}</div>
+    <button class="btn pri wide" type="submit">✅ ${T('पक्का करो','Save')}</button></form>` : `<div class="note">🔒 ${T('सेटिंग सिर्फ़ मालिक बदल सकता है।','Only the owner can change settings.')}</div>`}
+  <h3>💾 ${T('बैकअप','Backup')}</h3>
+  <div class="row"><button class="btn" data-act="backup-dl">⬇️ ${T('बैकअप फ़ाइल','Backup file')}</button><button class="btn" data-act="copy">📋 ${T('कॉपी','Copy')}</button>${isOwner() ? `<label class="btn" style="cursor:pointer">📂 ${T('बैकअप वापस लाओ','Restore backup')}<input type="file" accept=".json,application/json" id="restoreIn" hidden></label>` : ''}</div>
+  <textarea class="code" id="bk" readonly>${esc(JSON.stringify({settings: S.settings, items: S.items, parties: S.parties, txns: S.txns, ships: S.ships, expenses: S.expenses}))}</textarea>
+  ${isOwner() ? `<div class="row"><button class="btn ${armed === 'demo' ? 'armed' : ''}" data-act="demo-load">${armed === 'demo' ? T('पक्का? फिर दबाओ','Sure? Press again') : '🧪 ' + T('नमूना डेटा डालो','Load sample data')}</button>
+  <button class="btn ${armed === 'clear' ? 'armed' : 'bad'}" data-act="clear">${armed === 'clear' ? T('पक्का? सब मिट जाएगा','Sure? Everything goes') : '🧹 ' + T('सब मिटाओ, नया शुरू करो','Erase all, start fresh')}</button></div>` : ''}`; };
+
+/* ----- search ----- */
+SH.search = () => {
+  const q = (sheet.q || '').trim().toLowerCase(), m = s => String(s || '').toLowerCase().includes(q);
+  const its = q ? S.items.filter(i => m(i.name) || m(i.alias) || m(i.hs)) : [], ps = q ? S.parties.filter(p => m(p.name) || m(p.alias) || m(p.phone) || m(cname(p.country))) : [];
+  const inv = q && seeMoney() ? S.txns.filter(x => m(x.inv)) : [], sh = q ? S.ships.filter(s => m(s.ref) || m(s.container) || m(s.bl) || m(s.vessel)) : [];
+  return `<div class="sheet-hd"><h2>🔍 ${T('खोजो','Search')}</h2><button class="x" data-act="close">✕</button></div>
+  <form class="form" id="searchF"><input id="q" value="${esc(sheet.q || '')}" placeholder="${T('माल, आदमी, बिल नंबर, कंटेनर…','Item, person, invoice no, container…')}" autocomplete="off"></form>
+  <div class="list">${its.map(i => `<button class="li" data-act="open-item" data-id="${i.id}">${pic(i, 'sm')}<div class="body"><div class="t1">${esc(i.name)}</div><div class="t2">📦 ${qtyFmt(stockOf(i.id))} ${esc(i.unit)}</div></div></button>`).join('')}
+  ${ps.map(p => `<button class="li" data-act="open-party" data-id="${p.id}">${pic(p, 'sm')}<div class="body"><div class="t1">${esc(p.name)}</div><div class="t2">${flag(p.country)} ${esc(cname(p.country))}</div></div></button>`).join('')}
+  ${inv.map(x => `<button class="li" data-act="open-inv" data-id="${x.id}"><span class="ic">🧾</span><div class="body"><div class="t1">${esc(x.inv)}</div><div class="t2">${esc(party(x.party)?.name || '')} · ${money(x.amount)}</div></div></button>`).join('')}
+  ${sh.map(s => `<button class="li" data-act="open-ship" data-id="${s.id}"><span class="ic">${flag(s.country)}</span><div class="body"><div class="t1">${esc(s.ref)}</div><div class="t2">${esc(s.container || '')} ${esc(s.bl || '')}</div></div></button>`).join('')}
+  ${q && !its.length && !ps.length && !inv.length && !sh.length ? `<div class="empty">${T('कुछ नहीं मिला','Nothing found')}</div>` : ''}${!q ? `<div class="empty">${T('ऊपर लिखो','Type above')}</div>` : ''}</div>`;
+};
+
+/* ----- more menu (phone) ----- */
+const SECTIONS = () => [['home', '🏠', T('घर','Home')], ['stock', '📦', T('माल','Stock')], ['ships', '🚢', T('शिपमेंट','Shipments')], ['parties', '👥', T('लोग','People')], ['money', '💰', T('पैसा','Money'), 1], ['invoices', '🧾', T('बिल','Invoices'), 1], ['expenses', '💸', T('खर्चे','Expenses'), 1], ['reports', '📊', T('रिपोर्ट','Reports'), 1], ['activity', '🕘', T('किसने क्या किया','Activity')]].filter(s => !s[3] || seeMoney());
+SH.more = () => `<div class="sheet-hd"><h2>☰ ${T('सब हिस्से','All sections')}</h2><button class="x" data-act="close">✕</button></div>
+  <div class="pick">${SECTIONS().map(([k, ic, l]) => `<button class="pk ${view === k ? 'on' : ''}" data-act="nav" data-v="${k}" data-say="${esc(l)}"><span class="ic">${ic}</span>${l}</button>`).join('')}
+  <button class="pk" data-act="search" data-say="${T('खोजो','Search')}"><span class="ic">🔍</span>${T('खोजो','Search')}</button>
+  ${sampleCap ? `<button class="pk" data-act="ai" data-say="${T('मुनीम जी से पूछो','Ask Munim')}"><span class="ic">🤖</span>${T('मुनीम जी से पूछो','Ask Munim')}</button>` : ''}
+  <button class="pk" data-act="settings" data-say="${T('सेटिंग','Settings')}"><span class="ic">⚙️</span>${T('सेटिंग','Settings')}</button></div>`;
+
+/* ================= VOICE ENTRY + AI MUNIM ================= */
+let heard = '', listening = false, recog = null, dictDone = null;
+const canListen = () => !!(dictCap || window.SpeechRecognition || window.webkitSpeechRecognition);
+function startListen(onDone){
+  heard = ''; listening = true;
+  if (dictCap){
+    dictCap.start({language: hi() ? 'hi-IN' : 'en-IN'}).catch(e => { listening = false; toast(e?.code === 'not_granted' ? T('माइक की इजाज़त नहीं मिली','Microphone not allowed') : T('सुन नहीं पाया','Could not listen')); renderSheet(); });
+    dictDone = onDone; return;
+  }
+  const R = window.SpeechRecognition || window.webkitSpeechRecognition; if (!R){ listening = false; return; }
+  recog = new R(); recog.lang = hi() ? 'hi-IN' : 'en-IN'; recog.interimResults = true; recog.continuous = false;
+  recog.onresult = e => { heard = [...e.results].map(r => r[0].transcript).join(' '); const el = document.getElementById('heard'); if (el) el.textContent = heard; };
+  recog.onend = () => { listening = false; onDone(heard); };
+  recog.onerror = () => { listening = false; renderSheet(); };
+  try{ recog.start(); }catch(e){ listening = false; }
+}
+function stopListen(){ if (dictCap) dictCap.stop().catch(() => {}); else if (recog) try{ recog.stop(); }catch(e){} }
+function wireDictation(){
+  dictCap.onPartial(({text}) => { const el = document.getElementById('heard'); if (el) el.textContent = (heard + ' ' + text).trim(); });
+  dictCap.onFinal(({text}) => { heard = (heard + ' ' + text).trim(); const el = document.getElementById('heard'); if (el) el.textContent = heard; });
+  dictCap.onState(({state}) => { if (state === 'idle' && listening){ listening = false; const f = dictDone; dictDone = null; if (f) f(heard); } });
+}
+
+/* rule-based understanding of a spoken sentence (works offline); Claude refines it when available */
+function parseSpeech(text){
+  const t = ' ' + text.toLowerCase().replace(/[,।?!]/g, ' ') + ' ';
+  const has = re => re.test(t);
+  const p = null, i = null;
+  const goodsWord = has(/(किलो|kilo|kg|मीटर|meter|पीस|piece|pcs|बोरी|bori|bag|पेटी|peti|box|टन|ton|माल|maal)/);
+  const itemHit = (() => { for (const o of S.items) for (const nm of [o.name, o.alias].filter(Boolean)) for (const w of nm.toLowerCase().split(/[\s()]+/)) if (w.length >= 3 && t.includes(w)) return true; return false; })();
+  const money = !(goodsWord || itemHit) && has(/(पैस|रुपय|रुपए|रूपए|रुपये|paisa|paise|rupay|rupee|payment|पेमेंट|डॉलर|dollar|₹)/);
+  let type = null;
+  if (money){ type = has(/(मिला|मिले|आया|आए|जमा|received|got|mila|aaya|diye hame|दिए हमें)/) ? 'payIn' : has(/(दिया|दिए|भेजा|चुकाया|paid|gave|diya|bheja)/) ? 'payOut' : null; }
+  else if (has(/(दिया|दिए|बेचा|भेजा|बेचे|sold|sale|gave|diya|becha|bheja|dispatch)/)) type = 'sale';
+  else if (has(/(लिया|लिए|खरीदा|मँगाया|मंगाया|आया|bought|purchase|liya|kharida|mangaya|aaya)/)) type = 'buy';
+  const nums = []; const re = /(\d+(?:\.\d+)?)\s*(हज़ार|हजार|hazar|hazaar|thousand|k\b|लाख|lakh|lac)?/g; let m;
+  const t2 = t.replace(/(\d)[,](\d)/g, '$1$2');
+  while ((m = re.exec(t2))){ let v = +m[1]; const u = m[2] || ''; if (/हज़ार|हजार|hazar|thousand|^k$/.test(u)) v *= 1000; if (/लाख|lakh|lac/.test(u)) v *= 1e5; nums.push(v); }
+  const match = list => { let best = null, score = 0; for (const o of list){ for (const nm of [o.name, o.alias].filter(Boolean)){ const toks = nm.toLowerCase().split(/[\s()]+/).filter(w => w.length >= 3); let s = 0; for (const w of toks) if (t.includes(w)) s += w.length; if (t.includes(nm.toLowerCase())) s += 50; if (s > score){ score = s; best = o; } } } return best; };
+  const pp = match(S.parties), ii = match(S.items);
+  const out = {type, party: pp?.id || null, lines: [], amount: 0};
+  if (type === 'sale' || type === 'buy'){ if (ii && nums[0]) out.lines.push({item: ii.id, qty: nums[0], rate: nums[1] || (type === 'sale' ? ii.sell : ii.buy)}); else if (ii) out.item = ii.id; }
+  else if (nums.length) out.amount = Math.max(...nums);
+  return out;
+}
+async function understand(text){
+  let r = parseSpeech(text);
+  if (sampleCap){
+    try{
+      const ctx = {parties: S.parties.map(p => ({id: p.id, name: p.name, alias: p.alias || ''})), items: S.items.map(i => ({id: i.id, name: i.name, alias: i.alias || '', unit: i.unit, sell: i.sell, buy: i.buy}))};
+      const j = await sampleCap.json(`You turn one spoken sentence from an Indian import/export trader (Hindi, Hinglish or English) into a ledger entry.
+Types: "sale" (we gave/sold/sent goods), "buy" (we got/bought goods), "payIn" (someone paid us money), "payOut" (we paid money).
+Use only ids from this data: ${JSON.stringify(ctx)}
+Numbers may be words (e.g. "पाँच सौ" = 500, "दो हज़ार" = 2000, "1 लाख" = 100000). If a rate is not said, use the item's sell (sale) or buy (buy) price.
+Return JSON only: {"type": "...", "party": "<id or null>", "lines": [{"item": "<id>", "qty": number, "rate": number}], "amount": number (payments only, in rupees)}.
+Sentence: ${JSON.stringify(text)}`, {modelTier: 'quick'});
+      if (j && typeof j === 'object' && STEPS[j.type]){
+        r = {type: j.type, party: party(j.party) ? j.party : r.party, lines: Array.isArray(j.lines) ? j.lines.filter(l => item(l.item) && +l.qty > 0).map(l => ({item: l.item, qty: +l.qty, rate: +l.rate || 0})) : [], amount: +j.amount || 0};
+      }
+    }catch(e){}
+  }
+  return r;
+}
+SH.voice = () => {
+  const r = sheet.result;
+  return `<div class="sheet-hd"><h2>🎤 ${T('बोलकर एंट्री करो','Speak an entry')}</h2><button class="x" data-act="close">✕</button></div>
+  <div class="muted" style="text-align:center">${T('ऐसे बोलो: "अल नूर को 500 किलो बासमती 96 रुपये में दिया" या "हैम्बर्ग से 2 लाख रुपये मिले"','Say: "Gave Al Noor 500 kg basmati at 96" or "Received 2 lakh rupees from Hamburg"')}</div>
+  <button class="micbig ${listening ? 'live' : ''}" data-act="${listening ? 'mic-stop' : 'mic-start'}" aria-label="mic">${listening ? '⏹️' : '🎤'}</button>
+  <div class="heard" id="heard">${esc(heard)}</div>
+  ${sheet.busy ? `<div class="empty"><span class="spin">⚙️</span> ${T('समझ रहा हूँ…','Understanding…')}</div>` : ''}
+  ${r ? (r.type ? `<div class="alert info"><span class="ic">${TYPE_IC[r.type]}</span><span><b>${TYPE_NM(r.type)}${r.party ? ' · ' + esc(party(r.party)?.name) : ''}</b><span class="muted">${r.lines.map(l => `${item(l.item)?.icon} ${esc(item(l.item)?.name)} × ${qtyFmt(l.qty)} @ ${money(l.rate)}`).join(', ')}${r.amount ? money(r.amount) : ''}</span></span></div>
+    <div class="row"><button class="btn good" style="flex:1" data-act="voice-ok">✅ ${T('हाँ, आगे बढ़ो','Yes, continue')}</button><button class="btn" data-act="mic-start">🔁 ${T('फिर से बोलो','Say again')}</button></div>`
+    : `<div class="alert bad"><span class="ic">🤔</span><b>${T('समझ नहीं आया। फिर से बोलो — "दिया", "लिया", "पैसा मिला" या "पैसा दिया" ज़रूर बोलना।','Did not understand. Say it again — include gave, got, received or paid.')}</b></div>`) : ''}`;
+};
+function voiceToWizard(r){
+  startWiz(r.type, r.party);
+  if (r.type === 'sale' || r.type === 'buy'){
+    if (r.lines.length){ W.lines = r.lines.map(l => { const i = item(l.item); return {item: l.item, qty: l.qty, frate: +(l.rate / fxOf(W.cur)).toFixed(2), rate: l.rate, cost: +i.buy || 0}; }); }
+    if (!r.party) W.k = 1; else if (!W.lines.length){ W.k = 2; if (r.item) { W.item = r.item; W.k = 3; } } else W.k = STEPS[r.type].indexOf('cart');
+  } else if (r.party){ W.k = 2; if (r.amount){ W.cur = 'INR'; W.amount = r.amount; W.famount = r.amount; } }
+  onStep();
+}
+
+let chat = [];
+SH.ai = () => `<div class="sheet-hd"><h2>🤖 ${T('मुनीम जी से पूछो','Ask Munim')}</h2><button class="x" data-act="close">✕</button></div>
+  <div class="muted">${T('अपने धंधे के बारे में कुछ भी पूछो — जवाब बोलकर भी सुनाएगा।','Ask anything about your business — the answer is also read aloud.')}</div>
+  <div class="seg">${[T('किस माल को जल्दी मँगाना है?','Which goods should I reorder soon?'), T('सबसे ज़्यादा पैसा किससे लेना है?','Who owes us the most?'), T('इस महीने कितना मुनाफ़ा हुआ?','How much profit this month?'), T('कौन सा शिपमेंट लेट है?','Which shipment is late?')].map(q => `<button data-act="ai-ask" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+  <div class="chat">${chat.map(m => `<div class="bub ${m.role === 'user' ? 'me' : ''}">${esc(m.content)}</div>`).join('')}</div>
+  <form class="form" id="aiF"><div class="row" style="flex-wrap:nowrap"><input id="aiQ" placeholder="${T('यहाँ लिखो…','Type here…')}" autocomplete="off" style="flex:1">${canListen() ? `<button type="button" class="btn" data-act="ai-mic" aria-label="speak">🎤</button>` : ''}<button class="btn pri" type="submit">➡️</button></div></form>`;
+function bizSummary(){
+  const ag = aging('sale');
+  return JSON.stringify({today: today(), company: S.settings.company,
+    items: S.items.map(i => ({name: i.name, unit: i.unit, stock: stockOf(i.id), min: i.min, daysOfStockLeft: C.days[i.id] === Infinity ? null : C.days[i.id], incoming: C.incoming[i.id], buyINR: i.buy, sellINR: i.sell})),
+    parties: S.parties.map(p => ({name: p.name, country: p.country, kind: p.kind, balanceINR_positiveMeansTheyOweUs: Math.round(C.bal[p.id] || 0), overdueINR: Math.round(C.pOver[p.id] || 0)})),
+    shipments: S.ships.map(s => ({ref: s.ref, dir: s.dir === 'out' ? 'export' : 'import', party: party(s.party)?.name, country: s.country, stage: ['packing','port','at sea','customs','delivered'][s.stage], eta: s.eta, docsReady: Object.keys(s.docs || {}).filter(k => s.docs[k])})),
+    receivableAgingINR: ag,
+    last60Entries: S.txns.slice().sort((a, b) => b.d.localeCompare(a.d)).slice(0, 60).map(x => ({date: x.d, type: x.type, party: party(x.party)?.name, inv: x.inv, goods: linesTxt(x).replace(/[^\p{L}\p{N}\s,.×]/gu, '').trim(), amountINR: Math.round(x.amount || 0), costINR: Math.round(sum(x.lines || [], lineCost)), status: C.inv[x.id]?.status})),
+    expensesLast90: S.expenses.filter(e => e.d >= addDays(today(), -90)).map(e => ({date: e.d, cat: e.cat, amountINR: e.amount}))});
+}
+async function askAI(q){
+  if (!q || !sampleCap) return;
+  chat.push({role: 'user', content: q}, {role: 'assistant', content: '…'}); renderSheet();
+  const sys = `You are "Munim ji", the trusted accountant of a small Indian import/export firm. The person asking may not read well: answer in ${hi() ? 'simple spoken Hindi (Devanagari)' : 'simple English'}, in at most 4 short sentences, numbers in Indian style (lakh), no tables, no markdown, no emoji. Use only this live business data (amounts in INR): ${bizSummary()}`;
+  const msgs = chat.slice(-9, -1).map(m => ({role: m.role, content: m.content}));
+  while (msgs.length && msgs[0].role !== 'user') msgs.shift();
+  msgs[0] = {role: 'user', content: sys + '\n\nQuestion: ' + msgs[0].content};
+  try{
+    const r = await sampleCap(msgs, {cache: false, onText: ({text}) => { chat[chat.length - 1].content = text; const b = document.querySelectorAll('.bub'); if (b.length) b[b.length - 1].textContent = text; }});
+    chat[chat.length - 1].content = r.text; speak(r.text);
+  }catch(e){ chat[chat.length - 1].content = e?.code === 'rate_limited' ? T('अभी बहुत सवाल हो गए, थोड़ी देर बाद पूछो।','Too many questions right now, try again shortly.') : T('अभी जवाब नहीं मिल पाया।','Could not get an answer right now.'); }
+  renderSheet();
+}
+
+/* ================= LOCK (roles + PIN) ================= */
+const lockOn = () => !!(S.settings.pins && S.settings.pins.owner);
+const isUnlocked = () => { try{ return sessionStorage.getItem('cm_unlocked') === '1'; }catch(e){ return false; } };
+const setUnlocked = () => { try{ sessionStorage.setItem('cm_unlocked', '1'); }catch(e){} };
+function needLock(){ return lockOn() && !isUnlocked(); }
+function renderLock(){
+  const root = document.getElementById('lockRoot');
+  if (!lockState){ root.innerHTML = ''; return; }
+  const r = lockState.role;
+  root.innerHTML = `<div class="lock" role="dialog" aria-modal="true"><div class="lock-in">
+    <span style="font-size:56px">🚢</span><h2 style="color:#fff;justify-content:center">${T('आप कौन हो?','Who are you?')}</h2>
+    <div class="roles">${Object.keys(ROLES).filter(k => k === 'owner' || S.settings.pins[k] || k === 'worker').map(k => `<button class="${r === k ? 'on' : ''}" data-act="lk-role" data-v="${k}" data-say="${esc(roleNm(k))}"><span class="ic">${ROLES[k][0]}</span>${roleNm(k)}</button>`).join('')}</div>
+    ${r && S.settings.pins[r] ? `<div>${T('PIN दबाओ','Enter PIN')}</div><div class="dots">${[...Array(S.settings.pins[r].length)].map((_, k) => `<i class="${k < lockState.buf.length ? 'f' : ''}"></i>`).join('')}</div>
+    <div class="keys">${['1','2','3','4','5','6','7','8','9','','0','⌫'].map(k => k ? `<button data-act="lk-key" data-k="${k}">${k}</button>` : '<span></span>').join('')}</div>` : r ? `<button class="btn good wide" data-act="lk-enter">➡️ ${T('अंदर जाओ','Enter')}</button>` : ''}
+    ${lockState.err ? `<b style="color:#ffb4ab">${T('गलत PIN','Wrong PIN')}</b>` : ''}
+  </div></div>`;
+}
+
+/* ================= RENDER ================= */
+let rq = false;
+function schedule(){ if (rq) return; rq = true; requestAnimationFrame(() => { rq = false; render(); }); }
+function render(){
+  if (!lockOn() && P.role !== 'worker') P.role = 'owner';
+  compute();
+  document.documentElement.lang = P.lang;
+  document.getElementById('appName').textContent = T('कार्गो मुनीम','Cargo Munim');
+  document.getElementById('coName').textContent = (S.settings.company || '') + (mode === 'cloud' ? (S.settings.company ? ' · ' : '') + '👥 ' + T('टीम','Team') : '');
+  document.getElementById('langLbl').textContent = hi() ? 'EN' : 'हि';
+  const vb = document.getElementById('voiceBtn'); vb.textContent = P.voice ? '🔊' : '🔇'; vb.classList.toggle('off', !P.voice);
+  document.getElementById('roleBtn').textContent = ROLES[P.role || 'owner'][0];
+  document.getElementById('micBtn').hidden = !canListen() || P.role === 'worker';
+  if (!V[view] || (!seeMoney() && ['money','invoices','expenses','reports'].includes(view))) view = 'home';
+  document.getElementById('main').innerHTML = V[view]();
+  const secs = SECTIONS();
+  document.getElementById('side').innerHTML = (P.role !== 'worker' ? `<button class="newbtn" data-act="wiz" data-say="${T('नई एंट्री','New entry')}"><span class="ic">➕</span>${T('नई एंट्री','New entry')}</button>` : '') + secs.map(([k, ic, l]) => `<button class="${view === k ? 'on' : ''}" data-act="nav" data-v="${k}" data-say="${esc(l)}"><span class="ic">${ic}</span>${l}</button>`).join('') + `<span class="sp"></span>${sampleCap ? `<button data-act="ai"><span class="ic">🤖</span>${T('मुनीम जी से पूछो','Ask Munim')}</button>` : ''}<button data-act="settings"><span class="ic">⚙️</span>${T('सेटिंग','Settings')}</button>`;
+  const nv = [['home', '🏠', T('घर','Home')], ['stock', '📦', T('माल','Stock')], P.role === 'worker' ? ['parties', '👥', T('लोग','People')] : ['new', '➕', T('नई एंट्री','New')], ['ships', '🚢', T('शिपमेंट','Ships')], ['more', '☰', T('और','More')]];
+  document.getElementById('nav').innerHTML = nv.map(([k, ic, l]) => k === 'new' ? `<button class="plus" data-act="wiz" data-say="${esc(l)}"><span class="ic">${ic}</span>${l}</button>` : k === 'more' ? `<button data-act="more" data-say="${esc(l)}"><span class="ic">${ic}</span>${l}</button>` : `<button class="${view === k ? 'on' : ''}" data-act="nav" data-v="${k}" data-say="${esc(l)}"><span class="ic">${ic}</span>${l}</button>`).join('');
+  renderSheet(); renderLock();
+}
+function renderSheet(){
+  const root = document.getElementById('sheetRoot');
+  if (!sheet || !SH[sheet.k]){ root.innerHTML = ''; return; }
+  const old = root.querySelector('.sheet'), sc = old ? old.scrollTop : 0, keepKey = old?.dataset.key === sheet.k + (sheet.id || '');
+  const focus = document.activeElement && root.contains(document.activeElement) ? document.activeElement.id : null;
+  const vals = {}; root.querySelectorAll('input:not([type=file]),select,textarea:not([readonly])').forEach(x => { if (x.id) vals[x.id] = x.value; });
+  const html = SH[sheet.k](); if (!html){ root.innerHTML = ''; return; }
+  root.innerHTML = `<div class="sheet-bg" data-act="bg"><div class="sheet ${['inv','ship'].includes(sheet.k) ? 'xl' : ''}" role="dialog" aria-modal="true" data-key="${esc(sheet.k + (sheet.id || ''))}">${html}</div></div>`;
+  const ns = root.querySelector('.sheet');
+  if (keepKey){ ns.scrollTop = sc; for (const k in vals){ const x = document.getElementById(k); if (x && x.value !== vals[k] && !['bk'].includes(k)) x.value = vals[k]; } }
+  if (focus){ const f = document.getElementById(focus); if (f){ f.focus(); if (f.setSelectionRange && f.type === 'text') try{ f.setSelectionRange(f.value.length, f.value.length); }catch(e){} } }
+}
+function toast(msg){ const r = document.getElementById('toastRoot'); r.innerHTML = `<div class="toast" role="status">${esc(msg)}</div>`; clearTimeout(toast.t); toast.t = setTimeout(() => r.innerHTML = '', 2400); }
+
+/* ================= FILES ================= */
+async function saveFile(name, data, mime){
+  if (dl){ try{ await dl.save({filename: name, data: new Blob([data], {type: mime})}); toast('✅ ' + T('फ़ाइल सेव हुई','File saved')); }catch(e){ if (e?.code !== 'declined') toast('⚠️ ' + T('फ़ाइल सेव नहीं हुई','File not saved')); } return; }
+  if (window.claude){ toast(T('यहाँ डाउनलोड नहीं हो सकता — ऊपर से कॉपी करो','Download is not available here — copy instead')); return; }
+  try{ const u = URL.createObjectURL(new Blob([data], {type: mime})); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 3000); }catch(e){}
+}
+const csvCell = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+const toCSV = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\n');
+function csvOf(k){
+  if (k === 'stock') return toCSV([['Item','Unit','Stock','Min','Days of stock','Incoming','Buy INR','Sell INR','HS code'], ...S.items.map(i => [i.name, i.unit, stockOf(i.id), i.min, C.days[i.id] === Infinity ? '' : C.days[i.id], C.incoming[i.id] || 0, i.buy, i.sell, i.hs || ''])]);
+  if (k === 'parties') return toCSV([['Name','Type','Country','Phone','Currency','Balance INR (+ they owe us)','Overdue INR'], ...S.parties.map(p => [p.name, p.kind, p.country, p.phone, p.cur || 'INR', Math.round(C.bal[p.id] || 0), Math.round(C.pOver[p.id] || 0)])]);
+  if (k === 'txns') return toCSV([['Date','Type','Doc no','Party','Goods','Currency','Foreign amount','Amount INR','Due','Status','Shipment'], ...S.txns.slice().sort((a, b) => a.d.localeCompare(b.d)).map(x => [x.d, x.type, x.inv || '', party(x.party)?.name || '', linesTxt(x).replace(/[^\p{L}\p{N}\s,.×()]/gu, '').trim(), x.cur || 'INR', x.famount ?? '', Math.round(x.amount || 0), x.due || '', C.inv[x.id]?.status || '', ship(x.ship)?.ref || ''])]);
+  if (k === 'ships') return toCSV([['Ref','Direction','Party','Country','Stage','ETA','Vessel','Container','B/L','POL','POD','Docs ready'], ...S.ships.map(s => [s.ref, s.dir, party(s.party)?.name || '', s.country, ['Packing','Port','At sea','Customs','Delivered'][s.stage], s.eta, s.vessel || '', s.container || '', s.bl || '', s.pol || '', s.pod || '', DOCS.filter(d => (s.docs || {})[d[0]]).map(d => d[2]).join('; ')])]);
+  if (k === 'expenses') return toCSV([['Date','Category','Amount INR','Shipment','Note'], ...S.expenses.map(e => [e.d, EXP[e.cat]?.[2] || e.cat, e.amount, ship(e.ship)?.ref || '', e.note || ''])]);
+}
+
+/* ================= ACTIONS ================= */
+document.addEventListener('click', e => {
+  const sEl = e.target.closest('[data-say]'); if (sEl && sEl.dataset.say) speak(sEl.dataset.say);
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  if (a === 'bg' && e.target !== el) return;
+  const wasArmed = armed; if (!/^(del-|demo-load|clear)/.test(a)) armed = null;
+  const top = () => { const s = document.querySelector('.sheet'); if (s) s.scrollTop = 0; };
+  switch (a){
+    case 'nav': view = el.dataset.v; sheet = null; scrollTo(0, 0); break;
+    case 'more': sheet = {k: 'more'}; break;
+    case 'lang': P.lang = hi() ? 'en' : 'hi'; savePrefs(); break;
+    case 'voice': P.voice = !P.voice; savePrefs(); if (P.voice) setTimeout(() => speak(T('आवाज़ चालू','Voice on')), 50); break;
+    case 'settings': sheet = {k: 'settings'}; break;
+    case 'search': sheet = {k: 'search', q: ''}; setTimeout(() => document.getElementById('q')?.focus(), 30); break;
+    case 'close': case 'bg': if (listening) stopListen(); sheet = null; W = null; break;
+    case 'ship-tab': view = 'ships'; shipDir = el.dataset.d; break;
+    case 'pfilter': partyFilter = el.dataset.f; break;
+    case 'ifilter': invFilter = el.dataset.f; break;
+    case 'ikind': invKind = el.dataset.k; break;
+    case 'open-item': sheet = {k: 'item', id}; break;
+    case 'open-party': sheet = {k: 'party', id}; break;
+    case 'open-ship': sheet = {k: 'ship', id}; break;
+    case 'open-inv': sheet = {k: 'inv', id, kind: el.dataset.k || 'inv'}; break;
+    case 'inv-kind': sheet.kind = el.dataset.k; break;
+    case 'inv-dl': { const x = S.txns.find(t => t.id === sheet.id); saveFile(`${(x.inv || 'document')}-${sheet.kind || 'inv'}.html`, fullDoc(x, sheet.kind || 'inv'), 'text/html'); return; }
+    case 'inv-print': { const x = S.txns.find(t => t.id === sheet.id); const w = window.open('', '_blank'); if (w){ w.document.write(fullDoc(x, sheet.kind || 'inv')); w.document.close(); setTimeout(() => w.print(), 300); } return; }
+    case 'ship-next': {
+      const s = ship(id); if (!s || s.stage >= 4) break;
+      const n = {...s, stage: s.stage + 1}; if (n.stage === 4 && n.eta > today()) n.eta = today();
+      put('ships', n); logIt(STAGE_IC[n.stage], `${n.ref} → ${STAGES()[n.stage]}`);
+      if (n.stage === 4 && n.dir === 'in') toast('🏬 ' + T('माल गोदाम में जुड़ गया','Goods added to godown'));
+      setTimeout(() => speak(STAGES()[n.stage]), 50); break; }
+    case 'doc-tog': { const s = ship(id); const docs = {...(s.docs || {})}; docs[el.dataset.k] = !docs[el.dataset.k]; put('ships', {...s, docs}); if (docs[el.dataset.k]) logIt('📑', `${s.ref}: ${DOCS.find(d => d[0] === el.dataset.k)[2]} ✅`); break; }
+    case 'wiz': startWiz(el.dataset.type, el.dataset.party, el.dataset.ship ? {shipLink: el.dataset.ship} : null); break;
+    case 'w-type': W.type = el.dataset.v; W.k = 1; onStep(); top(); break;
+    case 'w-party': { W.party = el.dataset.v; const p = party(W.party); W.cur = p?.cur || 'INR'; W.terms = +(p?.terms ?? 30); W.k++; onStep(); top(); break; }
+    case 'w-item': W.item = el.dataset.v; W.k++; onStep(); top(); break;
+    case 'w-more': W.k = STEPS[W.type].indexOf('item'); onStep(); top(); break;
+    case 'w-rmline': W.lines.splice(+el.dataset.k, 1); break;
+    case 'w-cur': { const old = fxOf(W.cur); W.cur = el.dataset.v; if (+W.buf) W.buf = String(+((+W.buf * old) / fxOf(W.cur)).toFixed(W.cur === 'INR' ? 0 : 2)); for (const l of W.lines) l.frate = +(l.rate / fxOf(W.cur)).toFixed(4); break; }
+    case 'w-terms': W.terms = +el.dataset.v; break;
+    case 'w-inco': W.incoterm = el.dataset.v; break;
+    case 'w-mode': W.mode = el.dataset.v; break;
+    case 'w-expcat': W.expcat = el.dataset.v; W.k++; onStep(); top(); break;
+    case 'w-link': W.shipLink = el.dataset.v || null; break;
+    case 'w-ship': W.ship = el.dataset.v === '1'; break;
+    case 'w-country': W.country = el.dataset.v; break;
+    case 'w-eta': W.eta = +el.dataset.v; break;
+    case 'w-next': if (!el.disabled) { wizNext(); top(); } break;
+    case 'w-back': { const s = stepName(); if (s === 'cart' && W.lines.length){ const l = W.lines.pop(); W.item = l.item; W.qty = l.qty; W.k = STEPS[W.type].indexOf('qty'); } else if (s === 'item' && W.lines.length) W.k = STEPS[W.type].indexOf('cart'); else W.k = Math.max(0, W.k - 1); if (W.k === 0) W.type = null; onStep(); break; }
+    case 'w-save': wizSave(); break;
+    case 'np': npKey(el.dataset.k); renderSheet(); return;
+    case 'adj': W = {buf: ''}; sheet = {k: 'adj', id, m: el.dataset.m, back: sheet}; break;
+    case 'adj-why': sheet.why = el.dataset.v; break;
+    case 'adj-save': { const i = item(sheet.id), q = +W.buf; if (!(q > 0)) break; const qty = sheet.m === 'in' ? q : -q;
+      put('txns', {id: uid(), d: today(), type: 'adj', item: i.id, qty, why: sheet.why || 'count', amount: 0}); logIt('🔢', `${i.name} ${qty > 0 ? '+' : ''}${qtyFmt(qty)} ${i.unit}`);
+      sheet = sheet.back; W = null; toast('✅ ' + T('हो गया','Done')); speak(T('हो गया','Done')); break; }
+    case 'price': { const i = item(id); W = {buf: String(i.sell)}; sheet = {k: 'price', id, f: 'sell', back: sheet}; break; }
+    case 'price-f': { const i = item(sheet.id); sheet.f = el.dataset.f; W.buf = String(sheet.f === 'sell' ? i.sell : i.buy); break; }
+    case 'price-save': { const i = item(sheet.id), v = +W.buf; if (!(v > 0)) break; const n = {...i, [sheet.f]: v, hist: [...(i.hist || [])]}; const last = n.hist[n.hist.length - 1];
+      if (last && last.d === today()) n.hist[n.hist.length - 1] = {d: today(), sell: n.sell, buy: n.buy}; else n.hist.push({d: today(), sell: n.sell, buy: n.buy});
+      put('items', n); logIt('🏷️', `${i.name}: ${sheet.f === 'sell' ? T('बेचने का','sell') : T('खरीद का','buy')} ${money(i[sheet.f])} → ${money(v)}`); sheet = sheet.back; W = null; toast('✅ ' + T('भाव बदल गया','Price changed')); speak(T('हो गया','Done')); break; }
+    case 'item-form': { const o = id ? item(id) : null; sheet = {k: 'itemForm', id: id || null, icon: o?.icon || '📦', photo: o?.photo || null, ret: el.dataset.ret ? sheet : null, back: id ? sheet : null}; break; }
+    case 'party-form': { const o = id ? party(id) : null; sheet = {k: 'partyForm', id: id || null, icon: o?.icon || '🏢', photo: o?.photo || null, kind: o?.kind || (W && (W.type === 'buy' || W.type === 'payOut') ? 'supplier' : 'customer'), ret: el.dataset.ret ? sheet : null, back: id ? sheet : null}; break; }
+    case 'f-icon': sheet.icon = el.dataset.v; sheet.photo = null; renderSheet(); return;
+    case 'f-kind': sheet.kind = el.dataset.v; renderSheet(); return;
+    case 'del-txn': if (wasArmed === 'del-' + id){ const x = S.txns.find(t => t.id === id); if (x?.ship) remove('ships', x.ship); remove('txns', id); logIt('🗑️', `${T('मिटाया','Deleted')}: ${TYPE_NM(x.type)} ${x.inv || ''} ${money(x.amount || 0)}`); armed = null; } else armed = 'del-' + id; break;
+    case 'del-exp': if (wasArmed === 'dx-' + id){ remove('expenses', id); armed = null; } else armed = 'dx-' + id; break;
+    case 'del-item': if (wasArmed === 'del-item'){ const i = item(id); remove('items', id); logIt('🗑️', `${T('माल मिटाया','Item deleted')}: ${i?.name}`); sheet = null; armed = null; } else armed = 'del-item'; break;
+    case 'del-party': if (wasArmed === 'del-party'){ const p = party(id); remove('parties', id); logIt('🗑️', `${T('मिटाया','Deleted')}: ${p?.name}`); sheet = null; armed = null; } else armed = 'del-party'; break;
+    case 'demo-load': if (wasArmed === 'demo' || (!S.items.length && !S.parties.length)){ loadDemo(); armed = null; sheet = null; } else armed = 'demo'; break;
+    case 'clear': if (wasArmed === 'clear'){ clearAll(); armed = null; sheet = null; } else armed = 'clear'; break;
+    case 'backup-dl': saveFile(`cargo-munim-backup-${today()}.json`, document.getElementById('bk').value, 'application/json'); return;
+    case 'copy': { const ta = document.getElementById('bk'); try{ navigator.clipboard.writeText(ta.value).then(() => toast('📋 ' + T('कॉपी हो गया','Copied')), () => ta.select()); }catch(err){ ta.select(); } return; }
+    case 'csv': saveFile(`cargo-munim-${el.dataset.k}-${today()}.csv`, csvOf(el.dataset.k), 'text/csv'); return;
+    case 'voice-entry': heard = ''; sheet = {k: 'voice'}; render(); setTimeout(() => {}, 0); startListenVoice(); return;
+    case 'mic-start': heard = ''; sheet.result = null; startListenVoice(); break;
+    case 'mic-stop': stopListen(); break;
+    case 'voice-ok': { const r = sheet.result; voiceToWizard(r); break; }
+    case 'ai': sheet = {k: 'ai'}; setTimeout(() => document.getElementById('aiQ')?.focus(), 30); break;
+    case 'ai-ask': askAI(el.dataset.q); return;
+    case 'ai-mic': startListen(t => { if (t) askAI(t); }); renderSheet(); return;
+    case 'lock': lockState = {role: null, buf: ''}; break;
+    case 'lk-role': lockState = {role: el.dataset.v, buf: ''}; break;
+    case 'lk-enter': if (!S.settings.pins[lockState.role]){ if (lockState.role === 'owner' && lockOn()) break; P.role = lockState.role; savePrefs(); setUnlocked(); lockState = null; view = 'home'; } break;
+    case 'lk-key': { const r = lockState.role, pin = S.settings.pins[r]; if (el.dataset.k === '⌫') lockState.buf = lockState.buf.slice(0, -1); else lockState.buf += el.dataset.k; lockState.err = false;
+      if (lockState.buf.length >= pin.length){ if (lockState.buf === pin){ P.role = r; savePrefs(); setUnlocked(); lockState = null; view = 'home'; speak(T('स्वागत है','Welcome') + ' ' + roleNm(r)); } else { lockState.buf = ''; lockState.err = true; speak(T('गलत PIN','Wrong PIN')); } }
+      renderLock(); return; }
+    default: return;
+  }
+  render();
+});
+function startListenVoice(){
+  startListen(async text => {
+    if (!sheet || sheet.k !== 'voice') return;
+    if (!text){ renderSheet(); return; }
+    sheet.busy = true; renderSheet();
+    const r = await understand(text); if (!sheet || sheet.k !== 'voice') return;
+    sheet.busy = false; sheet.result = r; renderSheet();
+    if (r.type) speak(TYPE_NM(r.type) + (r.party ? ', ' + party(r.party)?.name : '') + '. ' + T('सही है?','Is that right?'));
+  });
+  renderSheet();
+}
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const v = id => document.getElementById(id)?.value?.trim() ?? '';
+  const f = e.target.id;
+  if (f === 'itemF'){
+    const o = sheet.id ? item(sheet.id) : null;
+    const it = {...(o || {id: uid(), hist: [], open: +v('f_open') || 0}), name: v('f_name'), alias: v('f_alias'), icon: sheet.icon, photo: sheet.photo || null, unit: v('f_unit') || 'pcs', min: +v('f_min') || 0, buy: +v('f_buy') || 0, sell: +v('f_sell') || 0, pack: +v('f_pack') || 0, hs: v('f_hs'), wt: +v('f_wt') || 0};
+    if (!o || o.buy !== it.buy || o.sell !== it.sell) it.hist = [...(it.hist || []).filter(h => h.d !== today()), {d: today(), sell: it.sell, buy: it.buy}];
+    put('items', it); logIt('📦', `${o ? T('माल बदला','Item edited') : T('नया माल','New item')}: ${it.name}`);
+    if (sheet.ret){ sheet = sheet.ret; W.item = it.id; W.k = STEPS[W.type].indexOf('qty'); onStep(); } else sheet = {k: 'item', id: it.id};
+  } else if (f === 'partyF'){
+    const o = sheet.id ? party(sheet.id) : null;
+    const p = {...(o || {id: uid()}), name: v('f_name'), alias: v('f_alias'), icon: sheet.icon, photo: sheet.photo || null, phone: v('f_phone'), country: v('f_country'), kind: sheet.kind, cur: v('f_cur') || 'INR', terms: +v('f_terms') || 0, limit: +v('f_limit') || 0};
+    put('parties', p); logIt('👥', `${o ? T('बदला','Edited') : T('नया','New')}: ${p.name}`);
+    if (sheet.ret){ sheet = sheet.ret; W.party = p.id; W.cur = p.cur; W.terms = p.terms; W.k = 2; onStep(); } else sheet = {k: 'party', id: p.id};
+  } else if (f === 'setF'){
+    const st = S.settings; Object.assign(st, {company: v('s_co'), address: v('s_addr'), iec: v('s_iec'), gstin: v('s_gst'), bank: v('s_bank'), invPrefix: v('s_pref') || 'INV', rodtep: +v('s_rod') || 0, drawback: +v('s_dbk') || 0});
+    for (const c of Object.keys(st.fx)) st.fx[c] = +v('fx_' + c) || st.fx[c];
+    st.pins = {owner: v('pin_owner').replace(/\D/g, ''), munim: v('pin_munim').replace(/\D/g, ''), worker: v('pin_worker').replace(/\D/g, '')};
+    putSettings(); logIt('⚙️', T('सेटिंग बदली','Settings changed')); sheet = null;
+  } else if (f === 'shipF'){
+    const s = ship(sheet.id); put('ships', {...s, vessel: v('s_vessel'), container: v('s_container'), bl: v('s_bl'), eta: v('s_eta') || s.eta, pol: v('s_pol'), pod: v('s_pod')}); logIt('🚢', `${s.ref}: ${T('जानकारी बदली','details updated')}`);
+  } else if (f === 'searchF'){ return; }
+  else if (f === 'aiF'){ const q = v('aiQ'); if (q){ document.getElementById('aiQ').value = ''; askAI(q); } return; }
+  else return;
+  toast('✅ ' + T('सेव हो गया','Saved')); speak(T('हो गया','Done')); render();
+});
+document.addEventListener('input', e => { if (e.target.id === 'q' && sheet?.k === 'search'){ sheet.q = e.target.value; renderSheet(); } });
+document.addEventListener('change', e => {
+  if (e.target.id === 'photoIn' && e.target.files[0]){
+    const r = new FileReader(); r.onload = () => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'), s = 160, k = Math.max(s / img.width, s / img.height); c.width = c.height = s;
+      c.getContext('2d').drawImage(img, (s - img.width * k) / 2, (s - img.height * k) / 2, img.width * k, img.height * k); sheet.photo = c.toDataURL('image/jpeg', .8); renderSheet(); }; img.src = r.result; }; r.readAsDataURL(e.target.files[0]);
+  }
+  if (e.target.id === 'restoreIn' && e.target.files[0]){ const r = new FileReader(); r.onload = () => restore(r.result); r.readAsText(e.target.files[0]); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && (sheet || lockState) && !(lockState && needLock())){ sheet = null; W = null; lockState = null; render(); return; }
+  const numScreen = W && W.buf !== undefined && sheet && (['adj','price'].includes(sheet.k) || (sheet.k === 'wiz' && ['qty','rate','amount'].includes(stepName())));
+  if (numScreen && !/input|textarea|select/i.test(e.target.tagName)){
+    if (/^[\d.]$/.test(e.key)){ npKey(e.key); renderSheet(); } else if (e.key === 'Backspace'){ npKey('⌫'); renderSheet(); } else if (e.key === 'Enter'){ document.querySelector('[data-act=w-next]:not([disabled]),[data-act=adj-save]:not([disabled]),[data-act=price-save]:not([disabled])')?.click(); }
+  }
+});
+
+/* ================= DATA OPS ================= */
+async function writeAll(data){
+  for (const c of ['items','parties','txns','ships','expenses']) for (const o of data[c] || []) put(c, o);
+  S.settings = Object.assign(defaultSettings(), data.settings || {}); putSettings();
+}
+async function clearAll(){
+  const keep = S.settings;
+  for (const c of COLLS) for (const o of [...S[c]]) remove(c, o.id);
+  S.settings = Object.assign(defaultSettings(), {fx: keep.fx, rodtep: keep.rodtep, drawback: keep.drawback, pins: keep.pins}); putSettings();
+  toast('🧹 ' + T('सब मिट गया — नया शुरू करो','All erased — start fresh'));
+}
+function loadDemo(){ const d = seed(); for (const c of COLLS){ const keep = new Set((d[c] || []).map(o => o.id)); for (const o of [...S[c]]) if (!keep.has(o.id)) remove(c, o.id); } writeAll(d); logIt('🧪', T('नमूना डेटा डाला','Sample data loaded')); toast('🧪 ' + T('नमूना डेटा आ गया','Sample data loaded')); }
+function restore(text){
+  try{ const d = JSON.parse(text); if (!d || !Array.isArray(d.items) || !Array.isArray(d.parties) || !Array.isArray(d.txns)) throw 0;
+    for (const c of ['items','parties','txns','ships','expenses']){ const keep = new Set((d[c] || []).map(o => o.id)); for (const o of [...S[c]]) if (!keep.has(o.id)) remove(c, o.id); }
+    writeAll({ships: [], expenses: [], ...d}); logIt('♻️', T('बैकअप वापस लाया','Backup restored')); sheet = null; toast('✅ ' + T('डेटा वापस आ गया','Data restored')); render(); }
+  catch(e){ toast('🚫 ' + T('ये फ़ाइल सही बैकअप नहीं है','This file is not a valid backup')); }
+}
+
+/* ================= SAMPLE DATA ================= */
+function seed(){
+  const D = n => addDays(today(), n), st = defaultSettings();
+  st.company = 'Demo Exports Pvt Ltd'; st.address = 'Plot 12, Vashi, Navi Mumbai 400703, India'; st.iec = '0300000000'; st.gstin = '27AAAAA0000A1Z5'; st.bank = 'Demo Bank, A/c 000000000, IFSC DEMO0000001, SWIFT DEMOINBB'; st.demo = true;
+  const items = [
+    {id:'i1', name:'Basmati Chawal', alias:'बासमती चावल', icon:'🍚', unit:'kg', open:17400, min:3000, buy:78, sell:96, pack:25, hs:'1006.30', hist:[{d:D(-150),buy:70,sell:88},{d:D(-120),buy:72,sell:90},{d:D(-90),buy:74,sell:92},{d:D(-60),buy:77,sell:95},{d:D(-20),buy:78,sell:96}]},
+    {id:'i2', name:'Haldi (Turmeric)', alias:'हल्दी', icon:'🫚', unit:'kg', open:2300, min:1000, buy:122, sell:155, pack:50, hs:'0910.30', hist:[{d:D(-150),buy:110,sell:140},{d:D(-110),buy:118,sell:150},{d:D(-70),buy:130,sell:165},{d:D(-30),buy:122,sell:155}]},
+    {id:'i3', name:'Cotton Kapda', alias:'कॉटन कपड़ा', icon:'🧵', unit:'meter', open:12700, min:2000, buy:62, sell:85, pack:100, hs:'5208.12', hist:[{d:D(-140),buy:60,sell:82},{d:D(-80),buy:61,sell:84},{d:D(-25),buy:62,sell:85}]},
+    {id:'i4', name:'Chai Patti', alias:'चाय पत्ती', icon:'🍵', unit:'kg', open:1040, min:1000, buy:220, sell:290, pack:20, hs:'0902.30', hist:[{d:D(-150),buy:240,sell:310},{d:D(-100),buy:232,sell:300},{d:D(-50),buy:225,sell:295},{d:D(-10),buy:220,sell:290}]},
+    {id:'i5', name:'Kaju (Cashew)', alias:'काजू', icon:'🥜', unit:'kg', open:530, min:500, buy:655, sell:790, pack:10, hs:'0801.32', hist:[{d:D(-120),buy:610,sell:740},{d:D(-60),buy:640,sell:770},{d:D(-15),buy:655,sell:790}]},
+    {id:'i6', name:'Machine Parts', alias:'मशीन पार्ट्स', icon:'⚙️', unit:'pcs', open:700, min:300, buy:340, sell:425, pack:20, hs:'8483.40', wt:1.8, hist:[{d:D(-90),buy:350,sell:430},{d:D(-30),buy:340,sell:425}]},
+    {id:'i7', name:'Lal Mirch', alias:'लाल मिर्च', icon:'🌶️', unit:'kg', open:1400, min:800, buy:180, sell:228, pack:25, hs:'0904.21', hist:[{d:D(-100),buy:165,sell:210},{d:D(-40),buy:175,sell:222},{d:D(-5),buy:180,sell:228}]},
+  ];
+  const parties = [
+    {id:'p1', name:'Al Noor Trading', alias:'अल नूर', icon:'🏢', country:'AE', kind:'customer', phone:'+971 50 000 0000', cur:'USD', terms:30, limit:800000},
+    {id:'p2', name:'Hamburg Foods GmbH', alias:'हैम्बर्ग', icon:'🏪', country:'DE', kind:'customer', phone:'', cur:'EUR', terms:60, limit:0},
+    {id:'p3', name:'Dhaka Textiles', alias:'ढाका', icon:'🏭', country:'BD', kind:'customer', phone:'', cur:'USD', terms:30, limit:0},
+    {id:'p4', name:'Sunrise Imports', alias:'सनराइज़', icon:'👨‍💼', country:'US', kind:'customer', phone:'', cur:'USD', terms:45, limit:0},
+    {id:'p5', name:'Kerala Spice Farms', alias:'केरला', icon:'🧑‍🌾', country:'IN', kind:'supplier', phone:'+91 90000 00000', cur:'INR', terms:15},
+    {id:'p6', name:'Shenzhen Parts Co', alias:'शेनझेन', icon:'🏭', country:'CN', kind:'supplier', phone:'', cur:'USD', terms:30},
+    {id:'p7', name:'Saigon Cashew Co', alias:'साइगॉन', icon:'🌰', country:'VN', kind:'supplier', phone:'', cur:'USD', terms:0},
+    {id:'p8', name:'Gulf Star Oman', alias:'गल्फ स्टार', icon:'⚓', country:'OM', kind:'both', phone:'', cur:'USD', terms:30},
+  ];
+  const fx = st.fx, I = Object.fromEntries(items.map(i => [i.id, i]));
+  let invN = 0, pbN = 0; const y = today().slice(0, 4);
+  const goods = (id, d, type, party, lines, cur, terms, extra) => { const f = fx[cur] || 1; const L = lines.map(([it, qty, rate]) => ({item: it, qty, rate, frate: +(rate / f).toFixed(2), cost: I[it].buy})); const amount = sum(L, l => l.qty * l.rate);
+    return {id, d: D(d), type, party, lines: L, amount, famount: +(amount / f).toFixed(2), cur, fx: f, terms, due: D(d + terms), incoterm: type === 'sale' ? 'FOB' : null, inv: type === 'sale' ? `INV-${y}-${String(++invN).padStart(4, '0')}` : `PB-${y}-${String(++pbN).padStart(4, '0')}`, at: D(d) + 'T10:00:00.000Z', role: 'owner', by: 'owner', ...extra}; };
+  const pay = (id, d, type, party, amount, cur, mode) => ({id, d: D(d), type, party, amount, famount: +(amount / (fx[cur] || 1)).toFixed(2), cur, fx: fx[cur] || 1, mode, at: D(d) + 'T11:00:00.000Z', role: 'munim', by: 'munim'});
+  const txns = [
+    goods('t1', -160, 'sale', 'p1', [['i1', 4000, 92]], 'USD', 30), pay('t1b', -128, 'payIn', 'p1', 368000, 'USD', 'bank'),
+    goods('t2', -130, 'sale', 'p2', [['i2', 800, 148], ['i4', 200, 300]], 'EUR', 60), pay('t2b', -70, 'payIn', 'p2', 178400, 'EUR', 'bank'),
+    goods('t3', -100, 'sale', 'p3', [['i3', 3000, 83]], 'USD', 30, {ship: 's0'}), pay('t3b', -66, 'payIn', 'p3', 249000, 'USD', 'lc'),
+    goods('t4', -75, 'sale', 'p8', [['i1', 2500, 95]], 'USD', 30),
+    goods('t5', -48, 'sale', 'p1', [['i1', 5000, 94], ['i7', 300, 222]], 'USD', 30), pay('t5b', -30, 'payIn', 'p1', 300000, 'USD', 'bank'),
+    goods('t6', -40, 'sale', 'p2', [['i2', 1200, 150]], 'EUR', 60), pay('t6b', -20, 'payIn', 'p2', 180000, 'EUR', 'bank'),
+    goods('t7', -35, 'sale', 'p3', [['i3', 6000, 84]], 'USD', 30, {ship: 's4'}), pay('t7b', -10, 'payIn', 'p3', 504000, 'USD', 'lc'),
+    goods('t8', -12, 'sale', 'p2', [['i4', 400, 295]], 'EUR', 60, {ship: 's2'}),
+    goods('t9', -6, 'sale', 'p1', [['i7', 800, 228]], 'USD', 30, {ship: 's1'}),
+    goods('t10', -3, 'sale', 'p4', [['i5', 150, 790], ['i2', 300, 158]], 'USD', 45, {ship: 's3'}),
+    goods('t11', -15, 'sale', 'p8', [['i1', 2000, 96]], 'USD', 30), pay('t11b', -2, 'payIn', 'p8', 60000, 'USD', 'bank'),
+    goods('t20', -140, 'buy', 'p5', [['i2', 2000, 115]], 'INR', 15), pay('t20b', -120, 'payOut', 'p5', 230000, 'INR', 'bank'),
+    goods('t21', -45, 'buy', 'p5', [['i2', 2500, 120]], 'INR', 15), pay('t21b', -25, 'payOut', 'p5', 200000, 'INR', 'upi'),
+    goods('t22', -8, 'buy', 'p5', [['i7', 1500, 180]], 'INR', 15),
+    goods('t23', -22, 'buy', 'p6', [['i6', 800, 340]], 'USD', 30, {ship: 's5'}), pay('t23b', -21, 'payOut', 'p6', 100000, 'USD', 'bank'),
+    goods('t24', -28, 'buy', 'p7', [['i5', 300, 655]], 'USD', 0, {ship: 's6'}), pay('t24b', -28, 'payOut', 'p7', 196500, 'USD', 'bank'),
+    goods('t25', -14, 'buy', 'p8', [['i3', 1500, 60]], 'USD', 30),
+    {id: 'a1', d: D(-9), type: 'adj', item: 'i4', qty: -20, why: 'damage', amount: 0, at: D(-9) + 'T09:00:00.000Z', role: 'worker', by: 'worker'},
+  ];
+  const sh = (id, dir, party, country, txn, stage, created, eta, ref, extra) => ({id, dir, party, country, lines: txns.find(t => t.id === txn).lines.map(l => ({item: l.item, qty: l.qty})), stage, created: D(created), eta: D(eta), ref, txn, pol: dir === 'out' ? 'Nhava Sheva' : cport(country), pod: dir === 'out' ? cport(country) : 'Nhava Sheva', at: D(created) + 'T12:00:00.000Z', role: 'owner', by: 'owner', ...extra});
+  const ships = [
+    sh('s0', 'out', 'p3', 'BD', 't3', 4, -100, -82, `EX-${y}-0001`, {docs: {inv: 1, pl: 1, sb: 1, bl: 1, coo: 1, ins: 1}, vessel: 'MV Bay Star', container: 'MSKU 104 2231'}),
+    sh('s4', 'out', 'p3', 'BD', 't7', 4, -35, -18, `EX-${y}-0002`, {docs: {inv: 1, pl: 1, sb: 1, bl: 1, coo: 1, ins: 1}, vessel: 'MV Bay Star', container: 'MSKU 118 9930'}),
+    sh('s2', 'out', 'p2', 'DE', 't8', 2, -12, 16, `EX-${y}-0003`, {docs: {inv: 1, pl: 1, sb: 1, bl: 1, phyto: 1}, vessel: 'MSC Aurora', container: 'MSCU 552 0193', bl: 'MSCNSA012345'}),
+    sh('s1', 'out', 'p1', 'AE', 't9', 2, -6, 4, `EX-${y}-0004`, {docs: {inv: 1, pl: 1, sb: 1}, vessel: 'Maersk Jebel', container: 'MRKU 774 1180'}),
+    sh('s3', 'out', 'p4', 'US', 't10', 0, -3, 30, `EX-${y}-0005`, {docs: {inv: 1}}),
+    sh('s5', 'in', 'p6', 'CN', 't23', 3, -22, 5, `IM-${y}-0001`, {docs: {inv: 1, pl: 1, bl: 1, sb: 1}, vessel: 'COSCO Pearl', container: 'CSNU 300 4471', bl: 'COSU6123456'}),
+    sh('s6', 'in', 'p7', 'VN', 't24', 2, -28, -2, `IM-${y}-0002`, {docs: {inv: 1, pl: 1, bl: 1}, vessel: 'Wan Hai 301', container: 'WHLU 221 0087'}),
+  ];
+  const ex = (id, d, cat, amount, ship, note) => ({id, d: D(d), cat, amount, ship, note, at: D(d) + 'T15:00:00.000Z', role: 'munim', by: 'munim'});
+  const expenses = [ex('e1', -98, 'freight', 42000, 's0', 'Nhava Sheva → Chittagong'), ex('e2', -97, 'cha', 8500, 's0', ''), ex('e3', -33, 'freight', 68000, 's4', ''), ex('e4', -32, 'cha', 9500, 's4', ''),
+    ex('e5', -11, 'freight', 54000, 's2', '20ft container'), ex('e6', -11, 'insurance', 3200, 's2', ''), ex('e7', -5, 'transport', 6500, 's1', 'Godown → JNPT'), ex('e8', -5, 'cha', 7000, 's1', ''),
+    ex('e9', -2, 'packing', 4800, 's3', 'Cartons'), ex('e10', -20, 'duty', 38500, 's5', 'BCD + IGST'), ex('e11', -18, 'bank', 1800, null, 'LC charges'), ex('e12', -4, 'other', 2500, null, 'Courier of documents')];
+  const log = [{id: 'l1', at: nowISO(), ic: '🧪', text: 'Sample data loaded', role: 'owner', by: 'owner'}];
+  return {settings: st, items, parties, txns, ships, expenses, log};
+}
+
+/* ================= BOOT ================= */
+async function boot(){
+  if (window.claude && typeof window.claude.use === 'function'){
+    loading = true; render();
+    const use = n => window.claude.use(n).catch(() => null);
+    [dl, sampleCap, dictCap, ttsCap, userCap] = await Promise.all([use('downloads'), use('sample'), use('dictation'), use('tts'), use('user')]);
+    if (dictCap) wireDictation();
+    db = await use('db');
+    if (db){
+      mode = 'cloud'; S = blank();
+      if (userCap) try{ me = await userCap.me(); }catch(e){}
+      let pending = COLLS.length + 1; const timer = setTimeout(() => { loading = false; loadFail = true; toast('⚠️ ' + T('डेटा धीरे आ रहा है…','Data is slow to load…')); schedule(); }, 10000);
+      const done = () => { if (--pending <= 0){ clearTimeout(timer); loading = false; schedule(); } };
+      for (const c of COLLS){ let first = true; const qy = c === 'log' ? db.collection(c).orderBy('at', 'desc').limit(300) : db.collection(c).limit(1000); qy.onSnapshot(snap => { S[c] = snap.docs.map(d => ({...d.data(), id: d.id})); if (first){ first = false; done(); } schedule(); }, err => { if (first){ first = false; done(); } toast('⚠️ ' + (err?.code || 'error')); }); }
+      let firstS = true; db.doc('config/settings').onSnapshot(snap => { S.settings = Object.assign(defaultSettings(), snap.exists ? snap.data() : {}); if (firstS){ firstS = false; done(); if (needLock()) lockState = {role: null, buf: ''}; } schedule(); }, () => { if (firstS){ firstS = false; done(); } });
+      return;
+    }
+    loading = false;
+  }
+  mode = 'local'; S = loadLocal() || seed(); saveLocal();
+  if (needLock()) lockState = {role: null, buf: ''};
+  render();
+}
+if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => {};
+if (!lockOn()) P.role = P.role || 'owner';
+boot();
+</script>
