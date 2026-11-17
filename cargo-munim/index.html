@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a6b78">
+<title>Cargo Munim</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Mukta:wght@400;600;700&display=swap">
+<style>
+/* Layout: phone-first app shell — sticky header, one scrolling column, big picture tiles, fixed bottom nav with a big + button */
+:root{
+  --bg:#eaf1f2; --surface:#ffffff; --surface2:#f4f8f9; --ink:#0f2a3a; --muted:#566d7a; --line:#d2dfe3;
+  --accent:#0a6b78; --accent-ink:#ffffff; --cargo:#d06a17; --cargo-bg:#fdecdc;
+  --good:#16794a; --good-bg:#dff2e6; --bad:#bf3328; --bad-bg:#fbe3df; --warn:#9a6a00; --warn-bg:#fcefcc;
+  --shadow:0 1px 2px rgba(15,42,58,.08),0 4px 14px rgba(15,42,58,.06);
+  --f-display:"Baloo 2","Mukta",system-ui,sans-serif;
+  --f-body:"Mukta","Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1820; --surface:#12242e; --surface2:#0f1e27; --ink:#e4eef2; --muted:#94a9b4; --line:#23404c;
+  --accent:#3fb3bf; --accent-ink:#04222a; --cargo:#f19a52; --cargo-bg:#3a2410;
+  --good:#52c98a; --good-bg:#0f3220; --bad:#ff8074; --bad-bg:#3b1612; --warn:#f0c255; --warn-bg:#352909;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1820; --surface:#12242e; --surface2:#0f1e27; --ink:#e4eef2; --muted:#94a9b4; --line:#23404c;
+  --accent:#3fb3bf; --accent-ink:#04222a; --cargo:#f19a52; --cargo-bg:#3a2410;
+  --good:#52c98a; --good-bg:#0f3220; --bad:#ff8074; --bad-bg:#3b1612; --warn:#f0c255; --warn-bg:#352909;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.4;margin:0;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--cargo);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--accent)}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--accent);color:var(--accent-ink);
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.brand .logo{font-size:30px;line-height:1}
+.brand b{font-family:var(--f-display);font-size:22px;font-weight:800;letter-spacing:.2px;display:block;line-height:1.05}
+.brand small{opacity:.85;font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbtn{background:rgba(255,255,255,.16);border:0;border-radius:14px;min-width:48px;height:48px;padding:0 10px;font-size:22px;display:flex;align-items:center;justify-content:center;gap:4px;color:inherit}
+.tbtn span{font-size:14px;font-weight:700}
+.tbtn.off{opacity:.55}
+
+main{max-width:1100px;margin:0 auto;padding-block:16px 130px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+h2{font-family:var(--f-display);font-size:24px;margin:0;line-height:1.15;text-wrap:balance;display:flex;align-items:center;gap:8px}
+h3{font-family:var(--f-display);font-size:19px;margin:0;color:var(--muted);font-weight:700}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+.muted{color:var(--muted)}
+.say{background:var(--surface);border:1px solid var(--line);border-radius:999px;width:44px;height:44px;font-size:20px;flex:none}
+
+.demo{background:var(--warn-bg);color:var(--warn);border-radius:14px;padding:10px 14px;font-size:15px;display:flex;gap:10px;align-items:center}
+
+/* summary tiles */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(min-width:760px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{border:0;text-align:left;border-radius:20px;padding:14px;background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;min-height:132px;position:relative}
+.tile .ic{font-size:40px;line-height:1}
+.tile .lbl{font-weight:700;font-size:17px}
+.tile .val{font-family:var(--f-display);font-weight:800;font-size:26px;line-height:1.1;word-break:break-word}
+.tile .sub{font-size:14px;color:var(--muted)}
+.tile.good{background:var(--good-bg)} .tile.good .val{color:var(--good)}
+.tile.bad{background:var(--bad-bg)} .tile.bad .val{color:var(--bad)}
+.tile.cargo{background:var(--cargo-bg)} .tile.cargo .val{color:var(--cargo)}
+.arrow{position:absolute;top:12px;right:12px;font-size:26px}
+
+/* big action buttons */
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(min-width:760px){.actions{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.act{border:2px solid var(--line);background:var(--surface);border-radius:20px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;font-size:17px;text-align:center;min-height:118px;justify-content:center}
+.act .ic{font-size:44px;line-height:1}
+.act.good{border-color:var(--good);color:var(--good)} .act.bad{border-color:var(--bad);color:var(--bad)}
+.act.cargo{border-color:var(--cargo);color:var(--cargo)} .act.acc{border-color:var(--accent);color:var(--accent)}
+.act:active,.tile:active,.card:active{transform:scale(.98)}
+
+/* alerts */
+.alerts{display:flex;flex-direction:column;gap:8px}
+.alert{border:0;width:100%;text-align:left;display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;font-size:17px;background:var(--surface);border-left:6px solid var(--warn)}
+.alert.bad{border-left-color:var(--bad)} .alert .ic{font-size:30px}
+.alert b{display:block}
+
+/* cards & grids */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px}
+.card{border:0;text-align:left;width:100%;background:var(--surface);border-radius:20px;padding:14px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:center;min-width:0}
+.card .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.card .nm{font-weight:700;font-size:19px;line-height:1.2;overflow-wrap:anywhere}
+.pic{width:64px;height:64px;border-radius:16px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:38px;flex:none;overflow:hidden}
+.pic img{width:100%;height:100%;object-fit:cover}
+.pic.big{width:96px;height:96px;font-size:60px;border-radius:22px}
+.pic.sm{width:44px;height:44px;font-size:26px;border-radius:12px}
+.bar{height:12px;border-radius:99px;background:var(--surface2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.bar.low i{background:var(--bad)}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 10px;font-size:14px;font-weight:700;background:var(--surface2);color:var(--muted)}
+.pill.good{background:var(--good-bg);color:var(--good)} .pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.cargo{background:var(--cargo-bg);color:var(--cargo)}
+.amt{font-family:var(--f-display);font-weight:800;font-size:22px;line-height:1.1}
+.amt.good{color:var(--good)} .amt.bad{color:var(--bad)}
+
+/* segmented */
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:700;font-size:16px;min-height:48px;display:flex;gap:6px;align-items:center}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* shipment */
+.ship{background:var(--surface);border-radius:20px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;min-width:0}
+.ship .hd{display:flex;gap:12px;align-items:center}
+.flag{font-size:46px;line-height:1}
+.track{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;position:relative}
+.track::before{content:"";position:absolute;left:10%;right:10%;top:22px;height:4px;background:var(--line);border-radius:4px}
+.stg{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;font-size:12px;text-align:center;color:var(--muted);line-height:1.15}
+.stg .dot{width:46px;height:46px;border-radius:50%;background:var(--surface2);border:3px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:22px;filter:grayscale(1);opacity:.6}
+.stg.done .dot{background:var(--good-bg);border-color:var(--good);filter:none;opacity:1}
+.stg.now .dot{background:var(--cargo-bg);border-color:var(--cargo);filter:none;opacity:1;transform:scale(1.12)}
+.stg.now{color:var(--cargo);font-weight:700}
+.btn{border:0;border-radius:16px;min-height:54px;padding:10px 18px;font-weight:700;font-size:18px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--surface2);border:2px solid var(--line)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.good{background:var(--good);color:#fff;border-color:var(--good)}
+.btn.bad{background:var(--bad);color:#fff;border-color:var(--bad)}
+.btn.ghost{background:transparent}
+.btn.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+.btn.wide{width:100%}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+/* country strip */
+.countries{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.cty{flex:none;background:var(--surface);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:92px;box-shadow:var(--shadow);border:0}
+.cty .flag{font-size:40px} .cty small{font-size:13px;color:var(--muted)}
+
+/* lists */
+.list{display:flex;flex-direction:column;background:var(--surface);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.li{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);min-width:0}
+.li:last-child{border-bottom:0}
+.li .body{flex:1;min-width:0}
+.li .t1{font-weight:700;overflow-wrap:anywhere}
+.li .t2{font-size:14px;color:var(--muted)}
+.li .ic{font-size:28px;flex:none}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+
+/* bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px))}
+.nav-in{max-width:700px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);align-items:end}
+.nav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:0;padding:8px 2px;font-size:13px;font-weight:700;color:var(--muted);min-height:64px;justify-content:center}
+.nav button .ic{font-size:28px;line-height:1.1}
+.nav button.on{color:var(--accent)}
+.nav button.on .ic{transform:scale(1.12)}
+.nav .plus{position:relative;top:-14px}
+.nav .plus .ic{width:66px;height:66px;border-radius:50%;background:var(--cargo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 4px 14px rgba(208,106,23,.45);border:4px solid var(--surface)}
+.nav .plus{color:var(--cargo)}
+
+/* sheet */
+.sheet-bg{position:fixed;inset:0;z-index:40;background:rgba(5,20,28,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:720px;max-height:94%;overflow-y:auto;border-radius:26px 26px 0 0;
+  padding-block:14px calc(24px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+@media(min-width:760px){.sheet-bg{align-items:center}.sheet{border-radius:26px;max-height:90%}}
+.sheet-hd{display:flex;align-items:center;gap:10px;position:sticky;top:-14px;background:var(--bg);padding-block:8px;z-index:2}
+.sheet-hd h2{flex:1;min-width:0}
+.x{border:0;background:var(--surface);border-radius:50%;width:48px;height:48px;font-size:22px;flex:none}
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:6px;border-radius:9px;background:var(--line)}
+.steps i.on{background:var(--cargo)}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr));gap:10px}
+.pk{border:3px solid transparent;background:var(--surface);border-radius:18px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-weight:700;font-size:16px;box-shadow:var(--shadow);min-width:0;overflow-wrap:anywhere}
+.pk.on{border-color:var(--cargo);background:var(--cargo-bg)}
+.pk .ic{font-size:44px;line-height:1}
+.pk small{font-weight:400;color:var(--muted);font-size:13px}
+.bigchoice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+
+/* numpad */
+.npd{background:var(--surface);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.screen{font-family:var(--f-display);font-weight:800;font-size:44px;text-align:right;line-height:1.1;padding:6px 10px;border-radius:14px;background:var(--surface2);overflow-wrap:anywhere;min-height:64px}
+.screen small{font-size:20px;color:var(--muted);font-weight:500}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keys button{border:0;background:var(--surface2);border-radius:14px;height:60px;font-size:28px;font-weight:700;font-family:var(--f-display)}
+.keys button.k-del{color:var(--bad)}
+.hint{font-size:16px;color:var(--muted);text-align:center}
+.eq{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--surface);border-radius:20px;padding:18px;font-size:20px;font-weight:700;box-shadow:var(--shadow);text-align:center}
+.eq .op{font-size:30px;color:var(--muted)}
+.eq .col{display:flex;flex-direction:column;align-items:center;gap:4px;max-width:140px;overflow-wrap:anywhere}
+
+/* forms */
+.form{display:flex;flex-direction:column;gap:14px}
+.form label{display:flex;flex-direction:column;gap:6px;font-weight:700}
+.form input,.form select{font:inherit;font-size:19px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);width:100%;min-height:54px}
+.iconpick{display:flex;flex-wrap:wrap;gap:8px}
+.iconpick button{width:54px;height:54px;font-size:30px;border-radius:14px;border:3px solid transparent;background:var(--surface)}
+.iconpick button.on{border-color:var(--cargo);background:var(--cargo-bg)}
+textarea{font:inherit;font-size:13px;width:100%;min-height:140px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);padding:10px}
+
+/* chart */
+.chart{background:var(--surface);border-radius:18px;padding:12px;box-shadow:var(--shadow)}
+.chart svg{width:100%;height:auto;display:block}
+.chart .ax{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.chart .grid-l{stroke:var(--line);stroke-width:1}
+.chart .ln-s{stroke:var(--accent);stroke-width:3;fill:none}
+.chart .ln-b{stroke:var(--cargo);stroke-width:3;fill:none;stroke-dasharray:6 4}
+.chart .ar{fill:var(--accent);opacity:.12}
+.chart .pt-s{fill:var(--accent)} .chart .pt-b{fill:var(--cargo)}
+.legend{display:flex;gap:16px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
+
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);padding:14px 22px;border-radius:16px;font-weight:700;font-size:18px;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="top-in">
+  <div class="brand"><span class="logo" aria-hidden="true">🚢</span><div style="min-width:0"><b id="appName">Cargo Munim</b><small id="coName"></small></div></div>
+  <button class="tbtn" id="voiceBtn" data-act="voice" aria-label="Voice">🔊</button>
+  <button class="tbtn" data-act="lang" aria-label="Language"><span id="langLbl">EN</span></button>
+  <button class="tbtn" data-act="settings" aria-label="Settings">⚙️</button>
+</div></header>
+
+<main id="main"></main>
+
+<nav class="nav"><div class="nav-in" id="nav"></div></nav>
+<div id="sheetRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/* ========= Cargo Munim — simple import/export ERP. All data stays in this browser (localStorage). ========= */
+const KEY = 'cargo_munim_v1';
+const DAY = 864e5;
+const todayISO = () => new Date().toISOString().slice(0,10);
+const addDays = (iso, n) => new Date(new Date(iso).getTime() + n*DAY).toISOString().slice(0,10);
+const daysFrom = iso => Math.round((new Date(iso) - new Date(todayISO())) / DAY);
+const uid = () => Math.random().toString(36).slice(2,9);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const flag = cc => cc ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '🏳️';
+
+/* ---------- words (Hindi / English) ---------- */
+const L = {
+ hi:{ app:'कार्गो मुनीम', home:'घर', stock:'माल', parties:'लोग', ships:'शिपमेंट', money:'पैसा', newE:'नई एंट्री',
+  lena:'लेना है', dena:'देना है', lenaLong:'हमें लोगों से पैसा लेना है', denaLong:'हमें लोगों को पैसा देना है',
+  stockVal:'गोदाम में माल', stockValSub:'कुल कीमत', going:'जा रहा माल', coming:'आ रहा माल', shipCount:'शिपमेंट रास्ते में',
+  alerts:'ध्यान दो', lowStock:'माल कम है', lateShip:'शिपमेंट लेट है', arriveSoon:'माल जल्दी आने वाला है', bigDue:'बड़ा पैसा बाकी',
+  sale:'माल दिया', buy:'माल लिया', payIn:'पैसा मिला', payOut:'पैसा दिया', adj:'माल गिनती बदली',
+  saleSub:'बेचा / भेजा', buySub:'खरीदा / मँगाया', payInSub:'किसी ने पैसा दिया', payOutSub:'हमने पैसा दिया',
+  whatHappened:'क्या हुआ?', who:'किसके साथ?', which:'कौन सा माल?', howMuch:'कितना माल?', rateQ:'एक का भाव कितना?', amountQ:'कितने पैसे?',
+  shipQ:'माल कैसे गया?', shipQin:'माल आ गया या रास्ते में है?', byShip:'शिप / ट्रक से भेजा', handDone:'यहीं दे दिया', arrived:'माल आ गया', onWay:'रास्ते में है',
+  toCountry:'किस देश जा रहा है?', fromCountry:'किस देश से आ रहा है?', whenReach:'कितने दिन में पहुँचेगा?', days:'दिन',
+  check:'एक बार देख लो', save:'पक्का करो ✅', next:'आगे ➡️', back:'⬅️ पीछे', done:'हो गया!', cancel:'रहने दो',
+  inStock:'गोदाम में है', notEnough:'इतना माल गोदाम में नहीं है', needNum:'पहले नंबर दबाओ',
+  stages:['पैकिंग','बंदरगाह','समुंदर में','कस्टम','पहुँच गया'], nextStep:'अगला कदम', daysLeft:'दिन बाकी', late:'दिन लेट', reached:'पहुँच गया',
+  out:'बाहर जा रहा (Export)', in:'अंदर आ रहा (Import)', goingTo:'अभी इन देशों में माल जा रहा है', comingFrom:'इन देशों से माल आ रहा है',
+  sell:'बेचने का भाव', buyP:'खरीद का भाव', priceChange:'भाव बदलो', priceHist:'भाव कैसे बदला', addStock:'माल आया ➕', removeStock:'माल गया ➖',
+  gaveWhom:'किसको कितना माल दिया', gotFrom:'किससे कितना माल आया', ledger:'हिसाब किताब', itemsGiven:'इनको क्या-क्या माल दिया', itemsGot:'इनसे क्या-क्या माल लिया',
+  settled:'हिसाब बराबर', all:'सब', customers:'ग्राहक', suppliers:'माल देने वाले', addItem:'नया माल जोड़ो', addParty:'नया आदमी / कंपनी जोड़ो',
+  name:'नाम', phone:'फ़ोन नंबर', country:'देश', unit:'इकाई (किलो, पीस…)', minStock:'कम से कम कितना माल रहे', startStock:'अभी कितना माल है',
+  type:'ये कौन है?', customer:'खरीदार', supplier:'माल देने वाला', both:'दोनों', picture:'तस्वीर चुनो', photo:'📷 फोटो लगाओ',
+  settings:'सेटिंग', company:'कंपनी का नाम', currency:'पैसे का निशान', backup:'बैकअप (डेटा बचाओ)', backupHint:'ये पूरा डेटा है — कॉपी करके कहीं सुरक्षित रख लो, या फ़ाइल डाउनलोड करो।',
+  download:'⬇️ फ़ाइल डाउनलोड', copy:'📋 कॉपी', restore:'♻️ बैकअप वापस लाओ', restoreFile:'📂 बैकअप फ़ाइल चुनो', restoreText:'या बैकअप यहाँ चिपकाओ और दबाओ', loadPasted:'चिपकाया डेटा लोड करो',
+  demoData:'नमूना डेटा वापस लाओ', clearAll:'सब मिटाओ, नया शुरू करो', sure:'पक्का? फिर दबाओ',
+  demoNote:'यह नमूना (demo) डेटा है। अपना काम शुरू करने के लिए सेटिंग ⚙️ में "सब मिटाओ" दबाएँ।',
+  recent:'हाल की एंट्री', noData:'अभी कुछ नहीं है', del:'🗑️ मिटाओ', editPrice:'नया भाव', total:'कुल',
+  thisItem:'इस माल का', voiceOn:'आवाज़ चालू', voiceOff:'आवाज़ बंद', readAll:'सुनो', theyOwe:'ये हमें देंगे', weOwe:'हमें इन्हें देना है',
+  items:'माल', ref:'नंबर', eta:'पहुँचने की तारीख', newShipFrom:'शिपमेंट', stockAdded:'माल गोदाम में जुड़ गया',
+  rupees:'रुपये', of:'का', units:'', lowAt:'कम से कम', addNew:'➕ नया', received:'पैसा मिला', paid:'पैसा दिया', willReachIn:'पहुँचने में',
+  allSet:'सब ठीक है 👍', stockLeft:'बचा', soldTotal:'कुल बेचा', saved:'सेव हो गया', copied:'कॉपी हो गया', restored:'डेटा वापस आ गया', badFile:'ये फ़ाइल सही नहीं है',
+ },
+ en:{ app:'Cargo Munim', home:'Home', stock:'Stock', parties:'People', ships:'Shipments', money:'Money', newE:'New entry',
+  lena:'To receive', dena:'To pay', lenaLong:'Money people owe us', denaLong:'Money we owe people',
+  stockVal:'Goods in godown', stockValSub:'total value', going:'Going out', coming:'Coming in', shipCount:'shipments on the way',
+  alerts:'Needs attention', lowStock:'Stock is low', lateShip:'Shipment is late', arriveSoon:'Goods arriving soon', bigDue:'Large amount pending',
+  sale:'Gave goods', buy:'Got goods', payIn:'Money received', payOut:'Money paid', adj:'Stock count changed',
+  saleSub:'Sold / sent', buySub:'Bought / ordered', payInSub:'Someone paid us', payOutSub:'We paid someone',
+  whatHappened:'What happened?', who:'With whom?', which:'Which item?', howMuch:'How much?', rateQ:'Price for one?', amountQ:'How much money?',
+  shipQ:'How did the goods go?', shipQin:'Arrived or still on the way?', byShip:'Sent by ship / truck', handDone:'Handed over here', arrived:'Goods arrived', onWay:'On the way',
+  toCountry:'Going to which country?', fromCountry:'Coming from which country?', whenReach:'Reaches in how many days?', days:'days',
+  check:'Check once', save:'Confirm ✅', next:'Next ➡️', back:'⬅️ Back', done:'Done!', cancel:'Cancel',
+  inStock:'in godown', notEnough:'Not that much stock in the godown', needNum:'Press a number first',
+  stages:['Packing','Port','At sea','Customs','Delivered'], nextStep:'Next step', daysLeft:'days left', late:'days late', reached:'Delivered',
+  out:'Going out (Export)', in:'Coming in (Import)', goingTo:'Goods are heading to', comingFrom:'Goods are coming from',
+  sell:'Selling price', buyP:'Buying price', priceChange:'Change price', priceHist:'Price over time', addStock:'Stock in ➕', removeStock:'Stock out ➖',
+  gaveWhom:'Who got how much', gotFrom:'Who supplied how much', ledger:'Ledger', itemsGiven:'Goods we gave them', itemsGot:'Goods we got from them',
+  settled:'All settled', all:'All', customers:'Buyers', suppliers:'Suppliers', addItem:'Add new item', addParty:'Add person / company',
+  name:'Name', phone:'Phone number', country:'Country', unit:'Unit (kg, pcs…)', minStock:'Minimum stock to keep', startStock:'Current stock',
+  type:'Who is this?', customer:'Buyer', supplier:'Supplier', both:'Both', picture:'Choose a picture', photo:'📷 Add photo',
+  settings:'Settings', company:'Company name', currency:'Currency sign', backup:'Backup (save your data)', backupHint:'This is all your data — copy it somewhere safe, or download the file.',
+  download:'⬇️ Download file', copy:'📋 Copy', restore:'♻️ Restore a backup', restoreFile:'📂 Choose backup file', restoreText:'or paste a backup here and press', loadPasted:'Load pasted data',
+  demoData:'Load sample data again', clearAll:'Erase all, start fresh', sure:'Sure? Press again',
+  demoNote:'This is sample (demo) data. To start your own work, press "Erase all" in Settings ⚙️.',
+  recent:'Recent entries', noData:'Nothing here yet', del:'🗑️ Delete', editPrice:'New price', total:'Total',
+  thisItem:'of this item', voiceOn:'Voice on', voiceOff:'Voice off', readAll:'Listen', theyOwe:'They will pay us', weOwe:'We must pay them',
+  items:'Goods', ref:'Ref', eta:'Arrival date', newShipFrom:'Shipment', stockAdded:'Goods added to godown',
+  rupees:'rupees', of:'of', units:'', lowAt:'min', addNew:'➕ New', received:'Money received', paid:'Money paid', willReachIn:'arrives in',
+  allSet:'All good 👍', stockLeft:'left', soldTotal:'total sold', saved:'Saved', copied:'Copied', restored:'Data restored', badFile:'This file is not a valid backup',
+ }
+};
+const COUNTRIES = [
+ ['IN','भारत','India'],['AE','दुबई (UAE)','UAE'],['SA','सऊदी अरब','Saudi Arabia'],['OM','ओमान','Oman'],['QA','क़तर','Qatar'],['KW','कुवैत','Kuwait'],
+ ['US','अमेरिका','USA'],['GB','इंग्लैंड','UK'],['DE','जर्मनी','Germany'],['NL','नीदरलैंड','Netherlands'],['FR','फ़्रांस','France'],['IT','इटली','Italy'],
+ ['CN','चीन','China'],['BD','बांग्लादेश','Bangladesh'],['NP','नेपाल','Nepal'],['LK','श्रीलंका','Sri Lanka'],['VN','वियतनाम','Vietnam'],['SG','सिंगापुर','Singapore'],
+ ['MY','मलेशिया','Malaysia'],['ID','इंडोनेशिया','Indonesia'],['TH','थाईलैंड','Thailand'],['JP','जापान','Japan'],['KR','कोरिया','Korea'],['AU','ऑस्ट्रेलिया','Australia'],
+ ['CA','कनाडा','Canada'],['RU','रूस','Russia'],['TR','तुर्की','Turkey'],['EG','मिस्र','Egypt'],['ZA','दक्षिण अफ़्रीका','South Africa'],['KE','केन्या','Kenya'],['IR','ईरान','Iran']
+];
+const ITEM_ICONS = ['📦','🍚','🌾','🌶️','🫚','☕','🍵','🥜','🌰','🧂','🍯','🥭','🍌','🥥','🧅','🧄','🍅','🐟','🧵','👕','👟','👜','🪵','🧱','⚙️','🔩','🛢️','🧴','💊','💎','🪨','🔌','🚗','🧸','🪑'];
+const PARTY_ICONS = ['🏢','🏭','🏪','🚚','👨‍💼','👩‍💼','🧔','👳','🧕','👴','🧑‍🌾','⚓'];
+const STAGE_IC = ['📦','⚓','🚢','🛃','✅'];
+const TYPE_IC = {sale:'📤', buy:'📥', payIn:'💰', payOut:'💸', adj:'🔢'};
+
+/* ---------- state ---------- */
+let S = load() || seed();
+let view = 'home', shipDir = 'out', partyFilter = 'all', sheet = null, W = null, armed = null;
+function load(){ try{ const j = localStorage.getItem(KEY); return j ? JSON.parse(j) : null; }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const t = k => (L[S.settings.lang] || L.hi)[k] ?? L.en[k] ?? k;
+const hi = () => S.settings.lang === 'hi';
+const money = n => (S.settings.cur || '₹') + ' ' + Math.round(Math.abs(n)).toLocaleString('en-IN');
+const qtyFmt = n => (+n).toLocaleString('en-IN');
+const cname = cc => { const c = COUNTRIES.find(x => x[0] === cc); return c ? (hi() ? c[1] : c[2]) : cc; };
+const item = id => S.items.find(x => x.id === id);
+const party = id => S.parties.find(x => x.id === id);
+const pic = (o, cls='') => `<span class="pic ${cls}">${o && o.photo ? `<img src="${o.photo}" alt="">` : esc(o ? o.icon : '❓')}</span>`;
+const fmtDate = iso => new Date(iso).toLocaleDateString(hi() ? 'hi-IN' : 'en-IN', {day:'numeric', month:'short'});
+
+/* ---------- numbers ---------- */
+function balance(pid){ // >0 they owe us, <0 we owe them
+  let b = 0;
+  for (const x of S.txns) if (x.party === pid){
+    if (x.type === 'sale') b += x.amount; else if (x.type === 'payIn') b -= x.amount;
+    else if (x.type === 'buy') b -= x.amount; else if (x.type === 'payOut') b += x.amount;
+  }
+  return b;
+}
+function totals(){
+  let lena = 0, dena = 0;
+  for (const p of S.parties){ const b = balance(p.id); if (b > 0) lena += b; else dena -= b; }
+  const stockVal = S.items.reduce((s, i) => s + i.stock * i.buy, 0);
+  const out = S.ships.filter(s => s.dir === 'out' && s.stage < 4), inn = S.ships.filter(s => s.dir === 'in' && s.stage < 4);
+  return {lena, dena, stockVal, out, inn};
+}
+function alerts(){
+  const a = [];
+  for (const s of S.ships) if (s.stage < 4 && daysFrom(s.eta) < 0) a.push({cls:'bad', ic:'⏰', t:t('lateShip'), d:`${flag(s.country)} ${esc(party(s.party)?.name)} · ${-daysFrom(s.eta)} ${t('late')}`, act:'open-ship', id:s.id});
+  for (const i of S.items) if (i.stock < i.min) a.push({cls:'bad', ic:'⚠️', t:`${t('lowStock')}: ${esc(i.name)}`, d:`${qtyFmt(i.stock)} ${esc(i.unit)} ${t('stockLeft')} · ${t('lowAt')} ${qtyFmt(i.min)}`, act:'open-item', id:i.id});
+  for (const s of S.ships) if (s.dir === 'in' && s.stage < 4 && daysFrom(s.eta) >= 0 && daysFrom(s.eta) <= 7) a.push({cls:'', ic:'📥', t:t('arriveSoon'), d:`${flag(s.country)} ${esc(party(s.party)?.name)} · ${daysFrom(s.eta)} ${t('daysLeft')}`, act:'open-ship', id:s.id});
+  return a;
+}
+
+/* ---------- voice ---------- */
+function speak(text){
+  if (!S.settings.voice || !('speechSynthesis' in window) || !text) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{1F1E6}-\u{1F1FF}]/gu, ' '));
+    u.lang = hi() ? 'hi-IN' : 'en-IN'; u.rate = .95;
+    const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith(hi() ? 'hi' : 'en-in')) || speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith(hi() ? 'hi' : 'en'));
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+const sayMoney = n => `${Math.round(Math.abs(n))} ${t('rupees')}`;
+
+/* ---------- views ---------- */
+const V = {};
+V.home = () => {
+  const T = totals(), A = alerts();
+  const sum = `${t('lena')} ${sayMoney(T.lena)}. ${t('dena')} ${sayMoney(T.dena)}. ${T.out.length} ${t('going')}. ${T.inn.length} ${t('coming')}.`;
+  const outC = groupBy(T.out, s => s.country), inC = groupBy(T.inn, s => s.country);
+  return `
+  ${S.demo ? `<div class="demo" data-say="${esc(t('demoNote'))}"><span style="font-size:26px">🧪</span><span>${t('demoNote')}</span></div>` : ''}
+  <div class="row"><h2>${hi() ? 'आज का हाल' : 'Today at a glance'}</h2><span class="sp"></span><button class="say" data-say="${esc(sum)}" aria-label="${t('readAll')}">🔊</button></div>
+  <div class="tiles">
+    <button class="tile good" data-act="money-tab" data-f="lena" data-say="${esc(t('lenaLong')+' '+sayMoney(T.lena))}"><span class="arrow">⬇️</span><span class="ic">💰</span><span class="lbl">${t('lena')}</span><span class="val num">${money(T.lena)}</span><span class="sub">${t('lenaLong')}</span></button>
+    <button class="tile bad" data-act="money-tab" data-f="dena" data-say="${esc(t('denaLong')+' '+sayMoney(T.dena))}"><span class="arrow">⬆️</span><span class="ic">💸</span><span class="lbl">${t('dena')}</span><span class="val num">${money(T.dena)}</span><span class="sub">${t('denaLong')}</span></button>
+    <button class="tile" data-act="nav" data-v="stock" data-say="${esc(t('stockVal')+' '+sayMoney(T.stockVal))}"><span class="ic">🏬</span><span class="lbl">${t('stockVal')}</span><span class="val num">${money(T.stockVal)}</span><span class="sub">${S.items.length} ${t('items')} · ${t('stockValSub')}</span></button>
+    <button class="tile cargo" data-act="nav" data-v="ships" data-say="${esc(T.out.length+' '+t('going')+', '+T.inn.length+' '+t('coming'))}"><span class="ic">🚢</span><span class="lbl">${t('ships')}</span><span class="val num">📤 ${T.out.length} · 📥 ${T.inn.length}</span><span class="sub">${t('shipCount')}</span></button>
+  </div>
+
+  <h3>${t('newE')}</h3>
+  <div class="actions">
+    <button class="act acc" data-act="wiz" data-type="sale" data-say="${t('sale')}"><span class="ic">📤</span>${t('sale')}</button>
+    <button class="act cargo" data-act="wiz" data-type="buy" data-say="${t('buy')}"><span class="ic">📥</span>${t('buy')}</button>
+    <button class="act good" data-act="wiz" data-type="payIn" data-say="${t('payIn')}"><span class="ic">💰</span>${t('payIn')}</button>
+    <button class="act bad" data-act="wiz" data-type="payOut" data-say="${t('payOut')}"><span class="ic">💸</span>${t('payOut')}</button>
+  </div>
+
+  <h3>${t('alerts')}</h3>
+  <div class="alerts">${A.length ? A.map(a => `<button class="alert ${a.cls}" data-act="${a.act}" data-id="${a.id}" data-say="${esc(a.t+'. '+a.d)}"><span class="ic">${a.ic}</span><span><b>${a.t}</b><span class="muted">${a.d}</span></span></button>`).join('') : `<div class="alert" style="border-left-color:var(--good)"><span class="ic">✅</span><b>${t('allSet')}</b></div>`}</div>
+
+  ${countryStrip(outC, t('goingTo'), 'out')}
+  ${countryStrip(inC, t('comingFrom'), 'in')}
+
+  <h3>${t('recent')}</h3>
+  ${txnList(S.txns.slice().sort((a,b) => b.d.localeCompare(a.d)).slice(0,8), true)}`;
+};
+function groupBy(arr, f){ const m = {}; for (const x of arr){ const k = f(x); (m[k] = m[k] || []).push(x); } return m; }
+function countryStrip(g, title, dir){
+  const ks = Object.keys(g); if (!ks.length) return '';
+  return `<h3>${title}</h3><div class="countries">${ks.map(k => `<button class="cty" data-act="ship-tab" data-d="${dir}" data-say="${esc(cname(k)+', '+g[k].length+' '+t('ships'))}"><span class="flag">${flag(k)}</span><b>${esc(cname(k))}</b><small>${g[k].length} ${t('ships')}</small></button>`).join('')}</div>`;
+}
+function txnList(list, showParty){
+  if (!list.length) return `<div class="list"><div class="empty">${t('noData')}</div></div>`;
+  return `<div class="list">${list.map(x => {
+    const p = party(x.party), i = item(x.item);
+    const good = x.type === 'sale' || x.type === 'payIn';
+    const label = t(x.type);
+    const what = i ? `${esc(i.icon)} ${esc(i.name)} × ${qtyFmt(x.qty)} ${esc(i.unit)}` : '';
+    const sayTxt = `${label}. ${p ? p.name : ''}. ${i ? i.name + ' ' + x.qty + ' ' + i.unit : ''}. ${x.amount ? sayMoney(x.amount) : ''}`;
+    return `<div class="li" data-say="${esc(sayTxt)}"><span class="ic">${TYPE_IC[x.type]}</span>
+      ${showParty && p ? pic(p,'sm') : ''}
+      <div class="body"><div class="t1">${label}${showParty && p ? ' · ' + esc(p.name) : ''}</div><div class="t2">${fmtDate(x.d)}${what ? ' · ' + what : ''}</div></div>
+      ${x.amount ? `<span class="amt num ${good ? 'good' : 'bad'}" style="font-size:19px">${money(x.amount)}</span>` : ''}
+      ${!showParty ? `<button class="btn ghost ${armed === 'del-' + x.id ? 'armed' : ''}" style="min-height:44px;padding:4px 10px;font-size:15px" data-act="del-txn" data-id="${x.id}">${armed === 'del-' + x.id ? t('sure') : '🗑️'}</button>` : ''}
+    </div>`; }).join('')}</div>`;
+}
+
+V.stock = () => `
+  <div class="row"><h2>📦 ${t('stock')}</h2><span class="sp"></span><button class="btn pri" data-act="item-form" data-say="${t('addItem')}">➕ ${t('addItem')}</button></div>
+  <div class="grid">${S.items.map(i => {
+    const low = i.stock < i.min, pct = Math.max(3, Math.min(100, i.stock / Math.max(1, i.min * 3) * 100));
+    return `<button class="card" data-act="open-item" data-id="${i.id}" data-say="${esc(`${i.name}. ${i.stock} ${i.unit} ${t('inStock')}. ${t('sell')} ${i.sell} ${t('rupees')}`)}">
+      ${pic(i)}<span class="body"><span class="nm">${esc(i.name)}</span>
+      <span class="num" style="font-weight:700;font-size:20px;color:${low ? 'var(--bad)' : 'var(--ink)'}">${qtyFmt(i.stock)} <small class="muted">${esc(i.unit)}</small> ${low ? '⚠️' : ''}</span>
+      <span class="bar ${low ? 'low' : ''}"><i style="width:${pct}%"></i></span>
+      <span class="row" style="gap:6px"><span class="pill good num">🏷️ ${money(i.sell)}</span><span class="pill num">🛒 ${money(i.buy)}</span>${trendPill(i)}</span></span></button>`;
+  }).join('') || `<div class="empty">${t('noData')}</div>`}</div>`;
+function trendPill(i){
+  const h = i.hist || []; if (h.length < 2) return '';
+  const a = h[h.length - 2].sell, b = h[h.length - 1].sell; if (a === b) return '';
+  return b > a ? `<span class="pill good">📈</span>` : `<span class="pill bad">📉</span>`;
+}
+
+V.parties = () => {
+  let ps = S.parties.map(p => ({p, b: balance(p.id)}));
+  if (partyFilter === 'lena') ps = ps.filter(x => x.b > 0); if (partyFilter === 'dena') ps = ps.filter(x => x.b < 0);
+  if (partyFilter === 'cust') ps = ps.filter(x => x.p.kind !== 'supplier'); if (partyFilter === 'sup') ps = ps.filter(x => x.p.kind !== 'customer');
+  ps.sort((a, b) => Math.abs(b.b) - Math.abs(a.b));
+  const f = (k, lbl) => `<button class="${partyFilter === k ? 'on' : ''}" data-act="pfilter" data-f="${k}" data-say="${esc(lbl)}">${lbl}</button>`;
+  return `<div class="row"><h2>👥 ${t('parties')}</h2><span class="sp"></span><button class="btn pri" data-act="party-form" data-say="${t('addParty')}">➕ ${t('addParty')}</button></div>
+  <div class="seg">${f('all', t('all'))}${f('lena', '💰 ' + t('lena'))}${f('dena', '💸 ' + t('dena'))}${f('cust', '🛍️ ' + t('customers'))}${f('sup', '🏭 ' + t('suppliers'))}</div>
+  <div class="grid">${ps.map(({p, b}) => partyCard(p, b)).join('') || `<div class="empty">${t('noData')}</div>`}</div>`;
+};
+function partyCard(p, b){
+  const s = b > 0 ? `${p.name}. ${t('theyOwe')} ${sayMoney(b)}` : b < 0 ? `${p.name}. ${t('weOwe')} ${sayMoney(b)}` : `${p.name}. ${t('settled')}`;
+  return `<button class="card" data-act="open-party" data-id="${p.id}" data-say="${esc(s)}">${pic(p)}
+    <span class="body"><span class="nm">${esc(p.name)}</span><span class="muted" style="font-size:15px">${flag(p.country)} ${esc(cname(p.country))}</span>
+    ${b > 0 ? `<span class="amt good num">⬇️ ${money(b)}</span><span class="pill good">${t('theyOwe')}</span>` : b < 0 ? `<span class="amt bad num">⬆️ ${money(b)}</span><span class="pill bad">${t('weOwe')}</span>` : `<span class="pill">🤝 ${t('settled')}</span>`}
+    </span></button>`;
+}
+
+V.ships = () => {
+  const list = S.ships.filter(s => s.dir === shipDir).sort((a, b) => (a.stage === 4) - (b.stage === 4) || a.eta.localeCompare(b.eta));
+  return `<h2>🚢 ${t('ships')}</h2>
+  <div class="seg"><button class="${shipDir === 'out' ? 'on' : ''}" data-act="ship-tab" data-d="out" data-say="${t('out')}">📤 ${t('out')}</button><button class="${shipDir === 'in' ? 'on' : ''}" data-act="ship-tab" data-d="in" data-say="${t('in')}">📥 ${t('in')}</button></div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr))">${list.map(shipCard).join('') || `<div class="empty">${t('noData')}</div>`}</div>`;
+};
+function shipCard(s){
+  const p = party(s.party), dl = daysFrom(s.eta);
+  const status = s.stage === 4 ? `<span class="pill good">✅ ${t('reached')}</span>` : dl < 0 ? `<span class="pill bad">⏰ ${-dl} ${t('late')}</span>` : `<span class="pill warn">⏳ ${dl} ${t('daysLeft')}</span>`;
+  const lines = s.lines.map(l => { const i = item(l.item); return i ? `${i.icon} ${i.name} × ${qtyFmt(l.qty)} ${i.unit}` : ''; }).join(', ');
+  const sayTxt = `${s.dir === 'out' ? t('going') : t('coming')}. ${cname(s.country)}. ${p?.name || ''}. ${lines.replace(/[^\p{L}\p{N}\s,×.]/gu, '')}. ${t('stages')[s.stage]}. ${s.stage < 4 ? (dl < 0 ? -dl + ' ' + t('late') : dl + ' ' + t('daysLeft')) : ''}`;
+  return `<div class="ship" data-say="${esc(sayTxt)}">
+    <div class="hd"><span class="flag">${flag(s.country)}</span><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:19px">${s.dir === 'out' ? '➡️ ' : '⬅️ '}${esc(cname(s.country))}</div><div class="muted" style="font-size:15px;overflow-wrap:anywhere">${esc(p?.name || '')} · ${t('ref')} ${esc(s.ref)}</div></div>${status}</div>
+    <div style="font-size:16px;overflow-wrap:anywhere">${esc(lines)}</div>
+    <div class="track">${t('stages').map((n, k) => `<div class="stg ${k < s.stage ? 'done' : k === s.stage ? 'now' : ''}"><span class="dot">${STAGE_IC[k]}</span>${n}</div>`).join('')}</div>
+    <div class="row"><span class="muted" style="font-size:15px">📅 ${t('eta')}: ${fmtDate(s.eta)}</span><span class="sp"></span>
+    ${s.stage < 4 ? `<button class="btn pri" data-act="ship-next" data-id="${s.id}" data-say="${esc(t('nextStep') + ': ' + t('stages')[s.stage + 1])}">${t('nextStep')}: ${STAGE_IC[s.stage + 1]} ${t('stages')[s.stage + 1]}</button>` : ''}</div>
+  </div>`;
+}
+
+V.money = () => {
+  const ps = S.parties.map(p => ({p, b: balance(p.id)}));
+  const le = ps.filter(x => x.b > 0).sort((a, b) => b.b - a.b), de = ps.filter(x => x.b < 0).sort((a, b) => a.b - b.b);
+  const T = totals();
+  const pays = S.txns.filter(x => x.type === 'payIn' || x.type === 'payOut').sort((a, b) => b.d.localeCompare(a.d)).slice(0, 10);
+  return `<h2>💰 ${t('money')}</h2>
+  <div class="tiles" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+    <div class="tile good" data-say="${esc(t('lenaLong') + ' ' + sayMoney(T.lena))}"><span class="arrow">⬇️</span><span class="ic">💰</span><span class="lbl">${t('lena')}</span><span class="val num">${money(T.lena)}</span></div>
+    <div class="tile bad" data-say="${esc(t('denaLong') + ' ' + sayMoney(T.dena))}"><span class="arrow">⬆️</span><span class="ic">💸</span><span class="lbl">${t('dena')}</span><span class="val num">${money(T.dena)}</span></div>
+  </div>
+  <div class="actions" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+    <button class="act good" data-act="wiz" data-type="payIn" data-say="${t('payIn')}"><span class="ic">💰</span>${t('payIn')}</button>
+    <button class="act bad" data-act="wiz" data-type="payOut" data-say="${t('payOut')}"><span class="ic">💸</span>${t('payOut')}</button>
+  </div>
+  <h3 id="lena">⬇️ ${t('lenaLong')}</h3>
+  <div class="grid">${le.map(x => partyCard(x.p, x.b)).join('') || `<div class="empty">${t('settled')}</div>`}</div>
+  <h3 id="dena">⬆️ ${t('denaLong')}</h3>
+  <div class="grid">${de.map(x => partyCard(x.p, x.b)).join('') || `<div class="empty">${t('settled')}</div>`}</div>
+  <h3>${t('recent')}</h3>${txnList(pays, true)}`;
+};
+
+/* ---------- sheets (pop-up screens) ---------- */
+const SH = {};
+SH.item = () => {
+  const i = item(sheet.id); if (!i) return '';
+  const low = i.stock < i.min;
+  const sales = S.txns.filter(x => x.item === i.id && x.type === 'sale'), buys = S.txns.filter(x => x.item === i.id && x.type === 'buy');
+  const agg = (arr) => Object.entries(groupBy(arr, x => x.party)).map(([pid, xs]) => ({p: party(pid), q: xs.reduce((s, x) => s + x.qty, 0), a: xs.reduce((s, x) => s + x.amount, 0)})).filter(x => x.p).sort((a, b) => b.q - a.q);
+  const aggList = (rows) => rows.length ? `<div class="list">${rows.map(r => `<div class="li" data-say="${esc(r.p.name + ', ' + r.q + ' ' + i.unit)}">${pic(r.p, 'sm')}<div class="body"><div class="t1">${esc(r.p.name)}</div><div class="t2">${flag(r.p.country)} ${esc(cname(r.p.country))}</div></div><div style="text-align:right"><div class="num" style="font-weight:700">${qtyFmt(r.q)} ${esc(i.unit)}</div><div class="t2 num muted">${money(r.a)}</div></div></div>`).join('')}</div>` : `<div class="list"><div class="empty">${t('noData')}</div></div>`;
+  return `<div class="sheet-hd"><h2>${esc(i.name)}</h2><button class="x" data-act="close" aria-label="close">✕</button></div>
+  <div class="row" style="gap:16px">${pic(i, 'big')}<div style="flex:1;min-width:0" data-say="${esc(i.name + '. ' + i.stock + ' ' + i.unit + ' ' + t('inStock'))}">
+    <div class="amt num" style="font-size:36px;color:${low ? 'var(--bad)' : 'var(--ink)'}">${qtyFmt(i.stock)} <small style="font-size:20px">${esc(i.unit)}</small></div>
+    <div class="muted">${t('inStock')} ${low ? `· <span class="pill bad">⚠️ ${t('lowStock')}</span>` : ''}</div></div></div>
+  <div class="row" style="gap:10px"><span class="pill good num" style="font-size:17px;padding:6px 14px" data-say="${esc(t('sell') + ' ' + i.sell)}">🏷️ ${t('sell')}: ${money(i.sell)}</span><span class="pill num" style="font-size:17px;padding:6px 14px" data-say="${esc(t('buyP') + ' ' + i.buy)}">🛒 ${t('buyP')}: ${money(i.buy)}</span></div>
+  <div class="actions" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <button class="act good" data-act="adj" data-id="${i.id}" data-m="in" data-say="${t('addStock')}"><span class="ic">➕</span>${t('addStock')}</button>
+    <button class="act bad" data-act="adj" data-id="${i.id}" data-m="out" data-say="${t('removeStock')}"><span class="ic">➖</span>${t('removeStock')}</button>
+    <button class="act cargo" data-act="price" data-id="${i.id}" data-say="${t('priceChange')}"><span class="ic">🏷️</span>${t('priceChange')}</button>
+  </div>
+  <h3>📈 ${t('priceHist')}</h3>${priceChart(i)}
+  <h3>📤 ${t('gaveWhom')}</h3>${aggList(agg(sales))}
+  <h3>📥 ${t('gotFrom')}</h3>${aggList(agg(buys))}
+  <button class="btn ${armed === 'del-item' ? 'armed' : 'ghost'}" data-act="del-item" data-id="${i.id}">${armed === 'del-item' ? t('sure') : t('del')}</button>`;
+};
+function priceChart(i){
+  const h = (i.hist || []).slice(-12); if (h.length < 2) return `<div class="chart"><div class="empty">${t('noData')}</div></div>`;
+  const W0 = 340, H0 = 170, pl = 48, pr = 14, pt = 12, pb = 26;
+  const vals = h.flatMap(x => [x.sell, x.buy]); let mn = Math.min(...vals), mx = Math.max(...vals); const pad = (mx - mn) * .15 || mx * .1 || 1; mn = Math.max(0, mn - pad); mx += pad;
+  const X = k => pl + k * (W0 - pl - pr) / (h.length - 1), Y = v => pt + (mx - v) * (H0 - pt - pb) / (mx - mn);
+  const ticks = [mn, (mn + mx) / 2, mx];
+  const line = key => h.map((x, k) => `${X(k).toFixed(1)},${Y(x[key]).toFixed(1)}`).join(' ');
+  const area = `${X(0)},${Y(mn)} ${line('sell')} ${X(h.length - 1)},${Y(mn)}`;
+  const last = h[h.length - 1];
+  return `<div class="chart"><svg viewBox="0 0 ${W0} ${H0}" role="img" aria-label="${t('priceHist')}">
+    ${ticks.map(v => `<line class="grid-l" x1="${pl}" x2="${W0 - pr}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${pl - 6}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v).toLocaleString('en-IN')}</text>`).join('')}
+    <polygon class="ar" points="${area}"/>
+    <polyline class="ln-b" points="${line('buy')}"/><polyline class="ln-s" points="${line('sell')}"/>
+    ${h.map((x, k) => `<circle class="pt-s" cx="${X(k)}" cy="${Y(x.sell)}" r="${k === h.length - 1 ? 5.5 : 3}"/><circle class="pt-b" cx="${X(k)}" cy="${Y(x.buy)}" r="${k === h.length - 1 ? 5.5 : 3}"/>`).join('')}
+    <text class="ax" x="${X(0)}" y="${H0 - 6}" text-anchor="start">${fmtDate(h[0].d)}</text><text class="ax" x="${X(h.length - 1)}" y="${H0 - 6}" text-anchor="end">${fmtDate(last.d)}</text>
+  </svg><div class="legend"><span><i style="background:var(--accent)"></i>🏷️ ${t('sell')}</span><span><i style="background:var(--cargo)"></i>🛒 ${t('buyP')}</span></div></div>`;
+}
+
+SH.party = () => {
+  const p = party(sheet.id); if (!p) return '';
+  const b = balance(p.id), tx = S.txns.filter(x => x.party === p.id).sort((a, c) => c.d.localeCompare(a.d));
+  const aggItems = type => Object.entries(groupBy(tx.filter(x => x.type === type), x => x.item)).map(([iid, xs]) => ({i: item(iid), q: xs.reduce((s, x) => s + x.qty, 0), a: xs.reduce((s, x) => s + x.amount, 0)})).filter(x => x.i);
+  const given = aggItems('sale'), got = aggItems('buy');
+  const rows = rs => `<div class="list">${rs.map(r => `<div class="li" data-say="${esc(r.i.name + ' ' + r.q + ' ' + r.i.unit)}">${pic(r.i, 'sm')}<div class="body"><div class="t1">${esc(r.i.name)}</div></div><div style="text-align:right"><div class="num" style="font-weight:700">${qtyFmt(r.q)} ${esc(r.i.unit)}</div><div class="t2 num muted">${money(r.a)}</div></div></div>`).join('')}</div>`;
+  const ps = S.ships.filter(s => s.party === p.id && s.stage < 4);
+  return `<div class="sheet-hd"><h2>${esc(p.name)}</h2><button class="x" data-act="close" aria-label="close">✕</button></div>
+  <div class="row" style="gap:16px">${pic(p, 'big')}<div style="flex:1;min-width:0">
+    <div style="font-size:18px">${flag(p.country)} ${esc(cname(p.country))}</div>
+    ${p.phone ? `<div class="row" style="gap:6px"><span class="num" style="font-weight:700;user-select:all">📞 ${esc(p.phone)}</span><a class="pill" href="tel:${esc(p.phone)}">📞</a></div>` : ''}
+    <span class="pill">${p.kind === 'customer' ? '🛍️ ' + t('customer') : p.kind === 'supplier' ? '🏭 ' + t('supplier') : '🔁 ' + t('both')}</span></div></div>
+  <div class="tile ${b > 0 ? 'good' : b < 0 ? 'bad' : ''}" style="min-height:0" data-say="${esc(b > 0 ? t('theyOwe') + ' ' + sayMoney(b) : b < 0 ? t('weOwe') + ' ' + sayMoney(b) : t('settled'))}">
+    <span class="lbl">${b > 0 ? '⬇️ ' + t('theyOwe') : b < 0 ? '⬆️ ' + t('weOwe') : '🤝 ' + t('settled')}</span><span class="val num" style="font-size:34px">${money(b)}</span></div>
+  <div class="actions">
+    <button class="act acc" data-act="wiz" data-type="sale" data-party="${p.id}" data-say="${t('sale')}"><span class="ic">📤</span>${t('sale')}</button>
+    <button class="act cargo" data-act="wiz" data-type="buy" data-party="${p.id}" data-say="${t('buy')}"><span class="ic">📥</span>${t('buy')}</button>
+    <button class="act good" data-act="wiz" data-type="payIn" data-party="${p.id}" data-say="${t('payIn')}"><span class="ic">💰</span>${t('payIn')}</button>
+    <button class="act bad" data-act="wiz" data-type="payOut" data-party="${p.id}" data-say="${t('payOut')}"><span class="ic">💸</span>${t('payOut')}</button>
+  </div>
+  ${ps.length ? `<h3>🚢 ${t('ships')}</h3>${ps.map(shipCard).join('')}` : ''}
+  ${given.length ? `<h3>📤 ${t('itemsGiven')}</h3>${rows(given)}` : ''}
+  ${got.length ? `<h3>📥 ${t('itemsGot')}</h3>${rows(got)}` : ''}
+  <h3>📒 ${t('ledger')}</h3>${txnList(tx, false)}
+  <button class="btn ${armed === 'del-party' ? 'armed' : 'ghost'}" data-act="del-party" data-id="${p.id}">${armed === 'del-party' ? t('sure') : t('del')}</button>`;
+};
+SH.ship = () => {
+  const s = S.ships.find(x => x.id === sheet.id); if (!s) return '';
+  return `<div class="sheet-hd"><h2>🚢 ${t('ships')}</h2><button class="x" data-act="close">✕</button></div>${shipCard(s)}`;
+};
+
+/* --- numpad --- */
+function numpad(label, unit, hint){
+  return `<div class="npd"><div class="screen num" data-say="${esc((W.buf || '0') + ' ' + (unit || ''))}">${W.buf ? qtyFmt(+W.buf) : '0'} <small>${esc(unit || '')}</small></div>
+  ${hint ? `<div class="hint">${hint}</div>` : ''}
+  <div class="keys">${['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(k => `<button data-act="np" data-k="${k}" ${k === '⌫' ? 'class="k-del" aria-label="delete"' : ''} data-say="${k === '⌫' ? '' : k}">${k}</button>`).join('')}</div></div>`;
+}
+
+/* --- entry wizard --- */
+const STEPS = {sale:['type','party','item','qty','rate','ship','confirm'], buy:['type','party','item','qty','rate','ship','confirm'], payIn:['type','party','amount','confirm'], payOut:['type','party','amount','confirm']};
+function startWiz(type, pid){
+  W = {type: type || null, party: pid || null, item: null, qty: 0, rate: 0, amount: 0, ship: null, country: null, eta: 15, buf: '', k: 0};
+  if (type){ W.k = 1; if (pid) W.k = 2; }
+  sheet = {k: 'wiz'}; onStep();
+}
+const stepName = () => W.type ? STEPS[W.type][W.k] : 'type';
+function onStep(){
+  const s = stepName(), i = item(W.item);
+  if (s === 'qty') W.buf = W.qty ? String(W.qty) : '';
+  if (s === 'rate') W.buf = String(W.rate || (i ? (W.type === 'sale' ? i.sell : i.buy) : ''));
+  if (s === 'amount'){ const b = balance(W.party); W.buf = W.amount ? String(W.amount) : ((W.type === 'payIn' && b > 0) || (W.type === 'payOut' && b < 0) ? String(Math.round(Math.abs(b))) : ''); }
+  if (s === 'ship' && !W.country) W.country = party(W.party)?.country || 'AE';
+  const q = {type: t('whatHappened'), party: t('who'), item: t('which'), qty: t('howMuch'), rate: t('rateQ'), amount: t('amountQ'), ship: W.type === 'sale' ? t('shipQ') : t('shipQin'), confirm: t('check')}[s];
+  setTimeout(() => speak(q), 80);
+}
+SH.wiz = () => {
+  const s = stepName(), steps = W.type ? STEPS[W.type] : STEPS.sale;
+  const title = W.type ? `${TYPE_IC[W.type]} ${t(W.type)}` : t('newE');
+  let body = '', canNext = false;
+  if (s === 'type'){
+    body = `<h3>${t('whatHappened')}</h3><div class="bigchoice">${['sale','buy','payIn','payOut'].map(k => `<button class="act ${{sale:'acc',buy:'cargo',payIn:'good',payOut:'bad'}[k]}" style="min-height:150px" data-act="w-type" data-v="${k}" data-say="${t(k)}"><span class="ic" style="font-size:56px">${TYPE_IC[k]}</span>${t(k)}<small class="muted" style="font-weight:400">${t(k + 'Sub')}</small></button>`).join('')}</div>`;
+  } else if (s === 'party'){
+    const list = S.parties.filter(p => W.type === 'sale' || W.type === 'payIn' ? p.kind !== 'supplier' : p.kind !== 'customer');
+    body = `<h3>${t('who')}</h3><div class="pick">${list.map(p => { const b = balance(p.id); return `<button class="pk ${W.party === p.id ? 'on' : ''}" data-act="w-party" data-v="${p.id}" data-say="${esc(p.name)}">${pic(p)}${esc(p.name)}<small>${flag(p.country)} ${b ? `<span class="${b > 0 ? 'good' : 'bad'}" style="color:var(--${b > 0 ? 'good' : 'bad'})">${money(b)}</span>` : ''}</small></button>`; }).join('')}
+      <button class="pk" data-act="party-form" data-ret="wiz" data-say="${t('addParty')}"><span class="ic">➕</span>${t('addNew')}</button></div>`;
+  } else if (s === 'item'){
+    body = `<h3>${t('which')}</h3><div class="pick">${S.items.map(i => `<button class="pk ${W.item === i.id ? 'on' : ''}" data-act="w-item" data-v="${i.id}" data-say="${esc(i.name + ', ' + i.stock + ' ' + i.unit)}">${pic(i)}${esc(i.name)}<small class="num">${qtyFmt(i.stock)} ${esc(i.unit)}</small></button>`).join('')}
+      <button class="pk" data-act="item-form" data-ret="wiz" data-say="${t('addItem')}"><span class="ic">➕</span>${t('addNew')}</button></div>`;
+  } else if (s === 'qty'){
+    const i = item(W.item), over = W.type === 'sale' && +W.buf > i.stock;
+    body = `<div class="row">${pic(i, 'sm')}<h3 style="flex:1">${t('howMuch')}</h3></div>${numpad('', i.unit, `${t('inStock')}: <b class="num">${qtyFmt(i.stock)} ${esc(i.unit)}</b>`)}
+      ${over ? `<div class="alert bad"><span class="ic">🚫</span><b>${t('notEnough')}</b></div>` : ''}`;
+    canNext = +W.buf > 0 && !over;
+  } else if (s === 'rate'){
+    const i = item(W.item);
+    body = `<div class="row">${pic(i, 'sm')}<h3 style="flex:1">${t('rateQ')}</h3></div>${numpad('', S.settings.cur + ' / ' + i.unit, `${t('total')}: <b class="num">${money(W.qty * (+W.buf || 0))}</b>`)}`;
+    canNext = +W.buf > 0;
+  } else if (s === 'amount'){
+    const b = balance(W.party), p = party(W.party);
+    body = `<div class="row">${pic(p, 'sm')}<h3 style="flex:1">${t('amountQ')}</h3></div>${numpad('', S.settings.cur, b ? `${b > 0 ? t('theyOwe') : t('weOwe')}: <b class="num">${money(b)}</b>` : t('settled'))}`;
+    canNext = +W.buf > 0;
+  } else if (s === 'ship'){
+    const sale = W.type === 'sale';
+    body = `<div class="bigchoice">
+      <button class="act ${W.ship === true ? 'cargo' : ''}" style="min-height:130px" data-act="w-ship" data-v="1" data-say="${sale ? t('byShip') : t('onWay')}"><span class="ic">🚢</span>${sale ? t('byShip') : t('onWay')}</button>
+      <button class="act ${W.ship === false ? 'good' : ''}" style="min-height:130px" data-act="w-ship" data-v="0" data-say="${sale ? t('handDone') : t('arrived')}"><span class="ic">${sale ? '🤝' : '🏬'}</span>${sale ? t('handDone') : t('arrived')}</button></div>
+      ${W.ship ? `<h3>${sale ? t('toCountry') : t('fromCountry')}</h3><div class="pick" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,104px),1fr))">${COUNTRIES.map(c => `<button class="pk ${W.country === c[0] ? 'on' : ''}" data-act="w-country" data-v="${c[0]}" data-say="${esc(hi() ? c[1] : c[2])}"><span class="ic">${flag(c[0])}</span><small style="color:inherit;font-weight:700">${esc(hi() ? c[1] : c[2])}</small></button>`).join('')}</div>
+      <h3>${t('whenReach')}</h3><div class="seg">${[3, 7, 15, 30, 45, 60].map(d => `<button class="${W.eta === d ? 'on' : ''}" data-act="w-eta" data-v="${d}" data-say="${d} ${t('days')}">📅 ${d} ${t('days')}</button>`).join('')}</div>` : ''}`;
+    canNext = W.ship === false || (W.ship === true && !!W.country);
+  } else if (s === 'confirm'){
+    const p = party(W.party), i = item(W.item);
+    const amt = W.type === 'sale' || W.type === 'buy' ? W.qty * W.rate : W.amount;
+    const sayTxt = `${t(W.type)}. ${p.name}. ${i ? i.name + ' ' + W.qty + ' ' + i.unit + '. ' : ''}${t('total')} ${sayMoney(amt)}. ${W.ship ? cname(W.country) + ', ' + W.eta + ' ' + t('days') : ''}`;
+    setTimeout(() => speak(sayTxt), 600);
+    const arrow = W.type === 'sale' || W.type === 'payOut' ? '➡️' : '⬅️';
+    body = `<div class="eq" data-say="${esc(sayTxt)}">
+      <span class="col"><span style="font-size:44px">🏠</span>${hi() ? 'हम' : 'Us'}</span><span class="op">${arrow}</span>
+      ${i ? `<span class="col">${pic(i)}<span class="num">${qtyFmt(W.qty)} ${esc(i.unit)}</span></span><span class="op">${arrow}</span>` : `<span class="col"><span style="font-size:44px">${TYPE_IC[W.type]}</span></span><span class="op">${arrow}</span>`}
+      <span class="col">${pic(p)}${esc(p.name)}</span></div>
+    <div class="tile ${W.type === 'sale' || W.type === 'payOut' ? 'good' : 'bad'}" style="min-height:0;align-items:center;text-align:center">
+      <span class="lbl">${t('total')}</span><span class="val num" style="font-size:38px">${money(amt)}</span>
+      ${i ? `<span class="sub num">${qtyFmt(W.qty)} × ${money(W.rate)}</span>` : ''}</div>
+    ${W.ship ? `<div class="alert"><span class="ic">${flag(W.country)}</span><span><b>🚢 ${esc(cname(W.country))}</b><span class="muted">📅 ${W.eta} ${t('days')} · ${fmtDate(addDays(todayISO(), W.eta))}</span></span></div>` : ''}`;
+    canNext = true;
+  }
+  const navBtns = W.k > 0 ? `<div class="row" style="position:sticky;bottom:-24px;background:var(--bg);padding-block:10px">
+    <button class="btn" data-act="w-back" data-say="${t('back')}">${t('back')}</button><span class="sp"></span>
+    ${['party','item','type'].includes(s) ? '' : s === 'confirm' ? `<button class="btn good" style="flex:1;min-height:64px;font-size:22px" data-act="w-save" data-say="${t('save')}">${t('save')}</button>` : `<button class="btn pri" style="flex:1" data-act="w-next" ${canNext ? '' : 'disabled'} data-say="${t('next')}">${t('next')}</button>`}</div>` : '';
+  return `<div class="sheet-hd"><h2>${title}</h2><button class="x" data-act="close" aria-label="close">✕</button></div>
+  <div class="steps">${steps.map((_, k) => `<i class="${k <= W.k ? 'on' : ''}"></i>`).join('')}</div>${body}${navBtns}`;
+};
+function wizNext(){
+  const s = stepName();
+  if (s === 'qty') W.qty = +W.buf; if (s === 'rate') W.rate = +W.buf; if (s === 'amount') W.amount = +W.buf;
+  W.k++; onStep();
+}
+function nextRef(base){ return Math.max(base + 50, ...S.ships.map(s => +String(s.ref).split('-')[1] || 0).filter(n => n > base && n < base + 1000)) + 1; }
+function wizSave(){
+  const d = todayISO(), id = uid();
+  if (W.type === 'sale' || W.type === 'buy'){
+    const i = item(W.item), amount = W.qty * W.rate, x = {id, d, type: W.type, party: W.party, item: W.item, qty: W.qty, rate: W.rate, amount};
+    if (W.type === 'sale') i.stock -= W.qty;
+    if (W.ship){
+      const sh = {id: uid(), dir: W.type === 'sale' ? 'out' : 'in', party: W.party, country: W.country, lines: [{item: W.item, qty: W.qty}], stage: 0, eta: addDays(d, W.eta), ref: (W.type === 'sale' ? 'EX-' : 'IM-') + nextRef(W.type === 'sale' ? 1000 : 2000), stockDone: false, txn: id};
+      S.ships.push(sh); x.ship = sh.id;
+    } else if (W.type === 'buy') i.stock += W.qty;
+    S.txns.push(x);
+  } else {
+    S.txns.push({id, d, type: W.type, party: W.party, amount: W.amount});
+  }
+  save(); sheet = null; const tp = W.type; W = null;
+  toast('✅ ' + t('done')); speak(t('done') + ' ' + t(tp));
+}
+
+/* --- small numpad sheets: stock adjust + price change --- */
+SH.adj = () => {
+  const i = item(sheet.id);
+  return `<div class="sheet-hd"><h2>${sheet.m === 'in' ? t('addStock') : t('removeStock')}</h2><button class="x" data-act="close">✕</button></div>
+  <div class="row">${pic(i, 'sm')}<b>${esc(i.name)}</b></div>${numpad('', i.unit, `${t('inStock')}: <b class="num">${qtyFmt(i.stock)} ${esc(i.unit)}</b>`)}
+  <button class="btn ${sheet.m === 'in' ? 'good' : 'bad'} wide" data-act="adj-save" ${+W.buf > 0 && (sheet.m === 'in' || +W.buf <= i.stock) ? '' : 'disabled'}>${t('save')}</button>`;
+};
+SH.price = () => {
+  const i = item(sheet.id);
+  return `<div class="sheet-hd"><h2>🏷️ ${t('priceChange')}</h2><button class="x" data-act="close">✕</button></div>
+  <div class="row">${pic(i, 'sm')}<b>${esc(i.name)}</b></div>
+  <div class="seg"><button class="${sheet.f === 'sell' ? 'on' : ''}" data-act="price-f" data-f="sell" data-say="${t('sell')}">🏷️ ${t('sell')}: ${money(i.sell)}</button><button class="${sheet.f === 'buy' ? 'on' : ''}" data-act="price-f" data-f="buy" data-say="${t('buyP')}">🛒 ${t('buyP')}: ${money(i.buy)}</button></div>
+  ${numpad('', S.settings.cur + ' / ' + i.unit, t('editPrice'))}
+  <button class="btn good wide" data-act="price-save" ${+W.buf > 0 ? '' : 'disabled'}>${t('save')}</button>`;
+};
+
+/* --- add forms --- */
+SH.itemForm = () => `<div class="sheet-hd"><h2>➕ ${t('addItem')}</h2><button class="x" data-act="close">✕</button></div>
+  <form class="form" id="itemF">
+    <div><b>${t('picture')}</b><div class="iconpick" style="margin-top:6px">${ITEM_ICONS.map(ic => `<button type="button" class="${sheet.icon === ic ? 'on' : ''}" data-act="f-icon" data-v="${ic}">${ic}</button>`).join('')}</div></div>
+    <label class="btn" style="flex-direction:row;cursor:pointer">${sheet.photo ? `<img src="${sheet.photo}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:cover">` : ''} ${t('photo')}<input type="file" accept="image/*" id="photoIn" hidden></label>
+    <label>${t('name')}<input id="f_name" required placeholder="Basmati Rice"></label>
+    <div class="row"><label style="flex:1;min-width:140px">${t('unit')}<input id="f_unit" value="kg" required></label><label style="flex:1;min-width:140px">${t('startStock')}<input id="f_stock" type="number" inputmode="decimal" min="0" value="0"></label></div>
+    <div class="row"><label style="flex:1;min-width:140px">🛒 ${t('buyP')}<input id="f_buy" type="number" inputmode="decimal" min="0" required></label><label style="flex:1;min-width:140px">🏷️ ${t('sell')}<input id="f_sell" type="number" inputmode="decimal" min="0" required></label></div>
+    <label>⚠️ ${t('minStock')}<input id="f_min" type="number" inputmode="decimal" min="0" value="100"></label>
+    <button class="btn good wide" type="submit">${t('save')}</button></form>`;
+SH.partyForm = () => `<div class="sheet-hd"><h2>➕ ${t('addParty')}</h2><button class="x" data-act="close">✕</button></div>
+  <form class="form" id="partyF">
+    <div><b>${t('type')}</b><div class="bigchoice" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:6px">${[['customer','🛍️'],['supplier','🏭'],['both','🔁']].map(([k, ic]) => `<button type="button" class="pk ${sheet.kind === k ? 'on' : ''}" data-act="f-kind" data-v="${k}" data-say="${t(k)}"><span class="ic">${ic}</span>${t(k)}</button>`).join('')}</div></div>
+    <div><b>${t('picture')}</b><div class="iconpick" style="margin-top:6px">${PARTY_ICONS.map(ic => `<button type="button" class="${sheet.icon === ic ? 'on' : ''}" data-act="f-icon" data-v="${ic}">${ic}</button>`).join('')}</div></div>
+    <label class="btn" style="flex-direction:row;cursor:pointer">${sheet.photo ? `<img src="${sheet.photo}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:cover">` : ''} ${t('photo')}<input type="file" accept="image/*" id="photoIn" hidden></label>
+    <label>${t('name')}<input id="f_name" required></label>
+    <label>${t('phone')}<input id="f_phone" type="tel" inputmode="tel"></label>
+    <label>${t('country')}<select id="f_country">${COUNTRIES.map(c => `<option value="${c[0]}">${flag(c[0])} ${esc(hi() ? c[1] : c[2])}</option>`).join('')}</select></label>
+    <button class="btn good wide" type="submit">${t('save')}</button></form>`;
+
+SH.settings = () => `<div class="sheet-hd"><h2>⚙️ ${t('settings')}</h2><button class="x" data-act="close">✕</button></div>
+  <form class="form" id="setF">
+    <label>${t('company')}<input id="s_co" value="${esc(S.settings.company)}"></label>
+    <label>${t('currency')}<select id="s_cur">${['₹','$','€','£','AED','৳','¥'].map(c => `<option ${S.settings.cur === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+    <button class="btn pri wide" type="submit">${t('save')}</button></form>
+  <h3>💾 ${t('backup')}</h3><p class="muted" style="margin:0">${t('backupHint')}</p>
+  <div class="row"><button class="btn" data-act="dl">${t('download')}</button><button class="btn" data-act="copy">${t('copy')}</button></div>
+  <textarea id="bk" readonly>${esc(JSON.stringify(S))}</textarea>
+  <h3>${t('restore')}</h3>
+  <label class="btn" style="cursor:pointer">${t('restoreFile')}<input type="file" accept=".json,application/json" id="restoreIn" hidden></label>
+  <p class="muted" style="margin:0">${t('restoreText')}:</p><textarea id="pasteIn" placeholder="{ ... }"></textarea><button class="btn" data-act="paste-load">${t('loadPasted')}</button>
+  <h3>🧪</h3>
+  <div class="row"><button class="btn ${armed === 'demo' ? 'armed' : ''}" data-act="demo">${armed === 'demo' ? t('sure') : '🧪 ' + t('demoData')}</button>
+  <button class="btn ${armed === 'clear' ? 'armed' : 'bad'}" data-act="clear">${armed === 'clear' ? t('sure') : '🧹 ' + t('clearAll')}</button></div>`;
+
+/* ---------- render ---------- */
+function render(){
+  document.documentElement.lang = S.settings.lang;
+  document.getElementById('appName').textContent = t('app');
+  document.getElementById('coName').textContent = S.settings.company || '';
+  document.getElementById('langLbl').textContent = hi() ? 'EN' : 'हि';
+  const vb = document.getElementById('voiceBtn'); vb.textContent = S.settings.voice ? '🔊' : '🔇'; vb.classList.toggle('off', !S.settings.voice); vb.setAttribute('aria-label', S.settings.voice ? t('voiceOn') : t('voiceOff'));
+  document.getElementById('main').innerHTML = V[view]();
+  const navs = [['home','🏠'],['stock','📦'],['new','➕'],['ships','🚢'],['parties','👥']];
+  document.getElementById('nav').innerHTML = navs.map(([k, ic]) => k === 'new'
+    ? `<button class="plus" data-act="wiz" data-say="${t('newE')}"><span class="ic">${ic}</span>${t('newE')}</button>`
+    : `<button class="${view === k ? 'on' : ''}" data-act="nav" data-v="${k}" data-say="${t(k)}"><span class="ic">${ic}</span>${t(k)}</button>`).join('') ;
+  renderSheet();
+}
+function renderSheet(){
+  const root = document.getElementById('sheetRoot');
+  if (!sheet){ root.innerHTML = ''; return; }
+  const sc = root.querySelector('.sheet')?.scrollTop || 0;
+  root.innerHTML = `<div class="sheet-bg" data-act="bg"><div class="sheet" role="dialog" aria-modal="true">${SH[sheet.k]()}</div></div>`;
+  root.querySelector('.sheet').scrollTop = sc;
+}
+function toast(msg){ const r = document.getElementById('toastRoot'); r.innerHTML = `<div class="toast" role="status">${esc(msg)}</div>`; clearTimeout(toast.t); toast.t = setTimeout(() => r.innerHTML = '', 2200); }
+
+/* ---------- actions ---------- */
+document.addEventListener('click', e => {
+  const sEl = e.target.closest('[data-say]'); if (sEl && sEl.dataset.say) speak(sEl.dataset.say);
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  if (a === 'bg' && e.target !== el) return;
+  const wasArmed = armed; if (!['del-txn','del-item','del-party','demo','clear'].includes(a)) armed = null;
+  const scrollSheet = () => { const s = document.querySelector('.sheet'); if (s) s.scrollTop = 0; };
+  switch (a){
+    case 'nav': view = el.dataset.v; sheet = null; scrollTo(0, 0); break;
+    case 'lang': S.settings.lang = hi() ? 'en' : 'hi'; save(); break;
+    case 'voice': S.settings.voice = !S.settings.voice; save(); if (S.settings.voice) setTimeout(() => speak(t('voiceOn')), 50); break;
+    case 'settings': sheet = {k: 'settings'}; break;
+    case 'close': case 'bg': sheet = null; W = null; break;
+    case 'money-tab': view = 'money'; setTimeout(() => document.getElementById(el.dataset.f)?.scrollIntoView({behavior: 'smooth'}), 50); break;
+    case 'ship-tab': view = 'ships'; shipDir = el.dataset.d; break;
+    case 'pfilter': partyFilter = el.dataset.f; break;
+    case 'open-item': sheet = {k: 'item', id}; break;
+    case 'open-party': sheet = {k: 'party', id}; break;
+    case 'open-ship': sheet = {k: 'ship', id}; break;
+    case 'ship-next': {
+      const s = S.ships.find(x => x.id === id); if (!s || s.stage >= 4) break;
+      s.stage++;
+      if (s.stage === 4){ s.eta = s.eta > todayISO() ? todayISO() : s.eta;
+        if (s.dir === 'in' && !s.stockDone){ for (const l of s.lines){ const i = item(l.item); if (i) i.stock += l.qty; } s.stockDone = true; toast('🏬 ' + t('stockAdded')); }
+      }
+      save(); setTimeout(() => speak(t('stages')[s.stage]), 50); break; }
+    case 'wiz': startWiz(el.dataset.type, el.dataset.party); break;
+    case 'w-type': W.type = el.dataset.v; W.k = 1; onStep(); scrollSheet(); break;
+    case 'w-party': W.party = el.dataset.v; W.k++; onStep(); break;
+    case 'w-item': W.item = el.dataset.v; W.rate = 0; W.k++; onStep(); break;
+    case 'w-ship': W.ship = el.dataset.v === '1'; if (W.ship) setTimeout(() => speak(W.type === 'sale' ? t('toCountry') : t('fromCountry')), 900); break;
+    case 'w-country': W.country = el.dataset.v; break;
+    case 'w-eta': W.eta = +el.dataset.v; break;
+    case 'w-next': if (!el.disabled) wizNext(); break;
+    case 'w-back': W.k = Math.max(0, W.k - 1); if (W.k === 0) W.type = null; onStep(); break;
+    case 'w-save': wizSave(); break;
+    case 'np': { const k = el.dataset.k; if (k === '⌫') W.buf = W.buf.slice(0, -1); else if (W.buf.length < 10) W.buf = (W.buf + k).replace(/^0+(?=\d)/, ''); break; }
+    case 'adj': W = {buf: ''}; sheet = {k: 'adj', id, m: el.dataset.m, back: sheet}; break;
+    case 'adj-save': {
+      const i = item(sheet.id), q = +W.buf; if (!(q > 0)) break;
+      i.stock += sheet.m === 'in' ? q : -q;
+      S.txns.push({id: uid(), d: todayISO(), type: 'adj', item: i.id, qty: sheet.m === 'in' ? q : -q, amount: 0});
+      save(); sheet = sheet.back; W = null; toast('✅ ' + t('saved')); speak(t('done')); break; }
+    case 'price': { const i = item(id); W = {buf: String(i.sell)}; sheet = {k: 'price', id, f: 'sell', back: sheet}; break; }
+    case 'price-f': { const i = item(sheet.id); sheet.f = el.dataset.f; W.buf = String(sheet.f === 'sell' ? i.sell : i.buy); break; }
+    case 'price-save': {
+      const i = item(sheet.id), v = +W.buf; if (!(v > 0)) break;
+      i[sheet.f] = v; i.hist = i.hist || []; const last = i.hist[i.hist.length - 1];
+      if (last && last.d === todayISO()){ last.sell = i.sell; last.buy = i.buy; } else i.hist.push({d: todayISO(), sell: i.sell, buy: i.buy});
+      save(); sheet = sheet.back; W = null; toast('✅ ' + t('saved')); speak(t('done')); break; }
+    case 'item-form': sheet = {k: 'itemForm', icon: '📦', ret: el.dataset.ret ? sheet : null}; break;
+    case 'party-form': sheet = {k: 'partyForm', icon: '🏢', kind: W && (W.type === 'buy' || W.type === 'payOut') ? 'supplier' : 'customer', ret: el.dataset.ret ? sheet : null}; break;
+    case 'f-icon': sheet.icon = el.dataset.v; keepForm(); return;
+    case 'f-kind': sheet.kind = el.dataset.v; keepForm(); return;
+    case 'del-txn': if (wasArmed === 'del-' + id){ deleteTxn(id); armed = null; } else armed = 'del-' + id; break;
+    case 'del-item': if (wasArmed === 'del-item'){ S.items = S.items.filter(x => x.id !== id); save(); sheet = null; armed = null; } else armed = 'del-item'; break;
+    case 'del-party': if (wasArmed === 'del-party'){ S.parties = S.parties.filter(x => x.id !== id); save(); sheet = null; armed = null; } else armed = 'del-party'; break;
+    case 'demo': if (wasArmed === 'demo'){ S = seed(); save(); armed = null; sheet = null; toast('✅ ' + t('restored')); } else armed = 'demo'; break;
+    case 'clear': if (wasArmed === 'clear'){ const st = S.settings; S = {settings: {...st, company: ''}, items: [], parties: [], txns: [], ships: [], demo: false}; save(); armed = null; sheet = null; toast('✅ ' + t('done')); } else armed = 'clear'; break;
+    case 'dl': {
+      try{ const b = new Blob([JSON.stringify(S, null, 1)], {type: 'application/json'}); const u = URL.createObjectURL(b); const l = document.createElement('a'); l.href = u; l.download = `cargo-munim-backup-${todayISO()}.json`; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); }catch(err){}
+      return; }
+    case 'copy': { const ta = document.getElementById('bk'); navigator.clipboard?.writeText(ta.value).then(() => toast(t('copied')), () => { ta.select(); }); if (!navigator.clipboard) ta.select(); return; }
+    case 'paste-load': restoreFrom(document.getElementById('pasteIn').value); break;
+    default: return;
+  }
+  render();
+});
+function keepForm(){ // re-render a form sheet without losing typed text
+  const vals = {}; document.querySelectorAll('.sheet input:not([type=file]), .sheet select').forEach(x => vals[x.id] = x.value);
+  renderSheet(); for (const k in vals){ const x = document.getElementById(k); if (x) x.value = vals[k]; }
+}
+function deleteTxn(id){
+  const x = S.txns.find(y => y.id === id); if (!x) return;
+  const i = item(x.item), sh = x.ship ? S.ships.find(s => s.id === x.ship) : null;
+  if (i){
+    if (x.type === 'sale') i.stock += x.qty;
+    if (x.type === 'buy' && (!sh || sh.stockDone)) i.stock -= x.qty;
+    if (x.type === 'adj') i.stock -= x.qty;
+  }
+  if (sh) S.ships = S.ships.filter(s => s !== sh);
+  S.txns = S.txns.filter(y => y !== x); save();
+}
+function restoreFrom(text){
+  try{ const d = JSON.parse(text); if (!d || !Array.isArray(d.items) || !Array.isArray(d.parties) || !Array.isArray(d.txns) || !Array.isArray(d.ships)) throw 0;
+    d.settings = Object.assign({lang: 'hi', voice: true, cur: '₹', company: ''}, d.settings || {}); S = d; save(); sheet = null; toast('✅ ' + t('restored')); }
+  catch(e){ toast('🚫 ' + t('badFile')); }
+}
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const v = id => document.getElementById(id)?.value?.trim();
+  if (e.target.id === 'itemF'){
+    const it = {id: uid(), name: v('f_name'), icon: sheet.icon, photo: sheet.photo || null, unit: v('f_unit') || 'pcs', stock: +v('f_stock') || 0, min: +v('f_min') || 0, buy: +v('f_buy') || 0, sell: +v('f_sell') || 0};
+    it.hist = [{d: todayISO(), sell: it.sell, buy: it.buy}];
+    S.items.push(it); save();
+    if (sheet.ret){ sheet = sheet.ret; W.item = it.id; W.k++; onStep(); } else sheet = {k: 'item', id: it.id};
+  } else if (e.target.id === 'partyF'){
+    const p = {id: uid(), name: v('f_name'), icon: sheet.icon, photo: sheet.photo || null, phone: v('f_phone'), country: v('f_country'), kind: sheet.kind};
+    S.parties.push(p); save();
+    if (sheet.ret){ sheet = sheet.ret; W.party = p.id; W.k++; onStep(); } else sheet = {k: 'party', id: p.id};
+  } else if (e.target.id === 'setF'){
+    S.settings.company = v('s_co'); S.settings.cur = v('s_cur'); save(); sheet = null;
+  } else return;
+  toast('✅ ' + t('saved')); speak(t('done')); render();
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'photoIn' && e.target.files[0]){
+    const r = new FileReader();
+    r.onload = () => { const img = new Image(); img.onload = () => {
+      const c = document.createElement('canvas'), s = 160, k = Math.max(s / img.width, s / img.height); c.width = c.height = s;
+      const g = c.getContext('2d'); g.drawImage(img, (s - img.width * k) / 2, (s - img.height * k) / 2, img.width * k, img.height * k);
+      sheet.photo = c.toDataURL('image/jpeg', .8); keepForm(); }; img.src = r.result; };
+    r.readAsDataURL(e.target.files[0]);
+  }
+  if (e.target.id === 'restoreIn' && e.target.files[0]){ const r = new FileReader(); r.onload = () => { restoreFrom(r.result); render(); }; r.readAsText(e.target.files[0]); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && sheet){ sheet = null; W = null; render(); return; }
+  const numScreen = W && W.buf !== undefined && sheet && (['adj','price'].includes(sheet.k) || (sheet.k === 'wiz' && ['qty','rate','amount'].includes(stepName())));
+  if (numScreen && !/input|textarea|select/i.test(e.target.tagName)){
+    if (/^\d$/.test(e.key) && W.buf.length < 10){ W.buf = (W.buf + e.key).replace(/^0+(?=\d)/, ''); renderSheet(); }
+    else if (e.key === 'Backspace' && !/input|textarea/i.test(e.target.tagName)){ W.buf = W.buf.slice(0, -1); renderSheet(); }
+  }
+});
+
+/* ---------- sample data (marked as demo) ---------- */
+function seed(){
+  const T = todayISO(), D = n => addDays(T, n);
+  const items = [
+    {id:'i1', name:'Basmati Chawal', icon:'🍚', unit:'kg', stock:12400, min:3000, buy:78, sell:96, hist:[{d:D(-150),buy:70,sell:88},{d:D(-120),buy:72,sell:90},{d:D(-90),buy:74,sell:92},{d:D(-60),buy:77,sell:95},{d:D(-20),buy:78,sell:96}]},
+    {id:'i2', name:'Haldi (Turmeric)', icon:'🫚', unit:'kg', stock:3600, min:1000, buy:122, sell:155, hist:[{d:D(-150),buy:110,sell:140},{d:D(-110),buy:118,sell:150},{d:D(-70),buy:130,sell:165},{d:D(-30),buy:122,sell:155}]},
+    {id:'i3', name:'Cotton Kapda', icon:'🧵', unit:'meter', stock:8200, min:2000, buy:62, sell:85, hist:[{d:D(-140),buy:60,sell:82},{d:D(-80),buy:61,sell:84},{d:D(-25),buy:62,sell:85}]},
+    {id:'i4', name:'Chai Patti', icon:'🍵', unit:'kg', stock:640, min:1000, buy:220, sell:290, hist:[{d:D(-150),buy:240,sell:310},{d:D(-100),buy:232,sell:300},{d:D(-50),buy:225,sell:295},{d:D(-10),buy:220,sell:290}]},
+    {id:'i5', name:'Kaju (Cashew)', icon:'🥜', unit:'kg', stock:380, min:500, buy:655, sell:790, hist:[{d:D(-120),buy:610,sell:740},{d:D(-60),buy:640,sell:770},{d:D(-15),buy:655,sell:790}]},
+    {id:'i6', name:'Machine Parts', icon:'⚙️', unit:'pcs', stock:1500, min:300, buy:340, sell:425, hist:[{d:D(-90),buy:350,sell:430},{d:D(-30),buy:340,sell:425}]},
+    {id:'i7', name:'Lal Mirch', icon:'🌶️', unit:'kg', stock:2100, min:800, buy:180, sell:228, hist:[{d:D(-100),buy:165,sell:210},{d:D(-40),buy:175,sell:222},{d:D(-5),buy:180,sell:228}]},
+  ];
+  const parties = [
+    {id:'p1', name:'Al Noor Trading', icon:'🏢', country:'AE', kind:'customer', phone:'+971 50 000 0000'},
+    {id:'p2', name:'Hamburg Foods GmbH', icon:'🏪', country:'DE', kind:'customer', phone:''},
+    {id:'p3', name:'Dhaka Textiles', icon:'🏭', country:'BD', kind:'customer', phone:''},
+    {id:'p4', name:'Sunrise Imports', icon:'👨‍💼', country:'US', kind:'customer', phone:''},
+    {id:'p5', name:'Kerala Spice Farms', icon:'🧑‍🌾', country:'IN', kind:'supplier', phone:'+91 90000 00000'},
+    {id:'p6', name:'Shenzhen Parts Co', icon:'🏭', country:'CN', kind:'supplier', phone:''},
+    {id:'p7', name:'Saigon Cashew Co', icon:'🌰', country:'VN', kind:'supplier', phone:''},
+    {id:'p8', name:'Gulf Star Oman', icon:'⚓', country:'OM', kind:'both', phone:''},
+  ];
+  const tx = (id, d, type, party, it, qty, rate, extra) => ({id, d:D(d), type, party, item:it, qty, rate, amount:qty*rate, ...extra});
+  const pay = (id, d, type, party, amount) => ({id, d:D(d), type, party, amount});
+  const txns = [
+    tx('t1',-48,'sale','p1','i1',5000,94), pay('t2',-30,'payIn','p1',300000), tx('t3',-6,'sale','p1','i7',800,228,{ship:'s1'}),
+    tx('t4',-40,'sale','p2','i2',1200,150), pay('t5',-20,'payIn','p2',180000), tx('t6',-12,'sale','p2','i4',400,295,{ship:'s2'}),
+    tx('t7',-35,'sale','p3','i3',6000,84,{ship:'s4'}), pay('t8',-10,'payIn','p3',504000),
+    tx('t9',-3,'sale','p4','i5',150,790,{ship:'s3'}),
+    tx('t10',-45,'buy','p5','i2',2500,120), pay('t11',-25,'payOut','p5',200000), tx('t12',-8,'buy','p5','i7',1500,180),
+    tx('t13',-22,'buy','p6','i6',800,340,{ship:'s5'}), pay('t14',-21,'payOut','p6',100000),
+    tx('t15',-28,'buy','p7','i5',300,655,{ship:'s6'}),
+    tx('t16',-15,'sale','p8','i1',2000,96), tx('t17',-14,'buy','p8','i3',1500,60), pay('t18',-2,'payIn','p8',60000),
+  ];
+  const ships = [
+    {id:'s1', dir:'out', party:'p1', country:'AE', lines:[{item:'i7',qty:800}], stage:2, eta:D(4), ref:'EX-1041', txn:'t3'},
+    {id:'s2', dir:'out', party:'p2', country:'DE', lines:[{item:'i4',qty:400}], stage:2, eta:D(16), ref:'EX-1042', txn:'t6'},
+    {id:'s3', dir:'out', party:'p4', country:'US', lines:[{item:'i5',qty:150}], stage:0, eta:D(30), ref:'EX-1043', txn:'t9'},
+    {id:'s4', dir:'out', party:'p3', country:'BD', lines:[{item:'i3',qty:6000}], stage:4, eta:D(-18), ref:'EX-1039', txn:'t7'},
+    {id:'s5', dir:'in', party:'p6', country:'CN', lines:[{item:'i6',qty:800}], stage:3, eta:D(5), ref:'IM-2017', stockDone:false, txn:'t13'},
+    {id:'s6', dir:'in', party:'p7', country:'VN', lines:[{item:'i5',qty:300}], stage:2, eta:D(-2), ref:'IM-2016', stockDone:false, txn:'t15'},
+  ];
+  return {settings:{lang:'hi', voice:true, cur:'₹', company:'Demo Exports Pvt Ltd'}, items, parties, txns, ships, demo:true};
+}
+
+if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => {};
+render();
+</script>
+</body>
+</html>
