@@ -71,7 +71,7 @@ You can also say just **"Jarvis"**, wait for **"Yes?"**, and then give the comma
       - On **Android 13+**, if the switch is greyed out ("Restricted setting"), Jarvis shows you what to do: *App info → ⋮ → Allow restricted settings*. Then it reopens Accessibility for you.
    3. **Record my voice** (voice lock)
    4. **Unrestricted battery** (one tap) and **Autostart** (on Xiaomi, Oppo, Realme, Vivo and similar phones)
-   5. Optional: display over other apps, brightness control, reading notifications aloud, Do Not Disturb access
+   5. Optional: brightness control, reading notifications aloud, Do Not Disturb access
 
    The voice brain is **built into the app**, so no download and no internet are needed.
 4. **Tap the glowing core** to start Jarvis. Now say *"Jarvis, open YouTube"*.

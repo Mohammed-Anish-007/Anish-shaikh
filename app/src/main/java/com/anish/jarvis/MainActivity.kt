@@ -312,11 +312,9 @@ class MainActivity : Activity() {
             PhoneSetup.openAutostart(this)
             toast("Turn Autostart ON for Jarvis")
         }
+        // No "Display over other apps" step: Jarvis doesn't need it. Once Accessibility is on,
+        // Android already lets it open apps from the background.
         list += listOf(
-            Step(
-                "overlay", "Open apps from background", "Display over other apps",
-                Settings.canDrawOverlays(this), true
-            ) { startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))) },
             Step(
                 "brightness", "Brightness control", "Modify system settings",
                 Settings.System.canWrite(this), true
